@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Properties>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd'T'HH:mm:ss.SSS} | %-5level | workflow(%X{workflow}) | task(%X{task}) | %msg%n</Property>
+        <Property name="LOG_DIR">./ogs</Property>
+    </Properties>
+
+    <Appenders>
+        <!-- Console Appender -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout>
+                <Pattern>${LOG_PATTERN}</Pattern>
+            </PatternLayout>
+        </Console>
+
+        <!-- Rolling file for all logs -->
+        <RollingFile name="AppLog"
+                     fileName="${LOG_DIR}/application.log"
+                     filePattern="${LOG_DIR}/application-%d{yyyy-MM-dd}.log.gz">
+            <PatternLayout>
+                <Pattern>${LOG_PATTERN}</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+        </RollingFile>
+
+        <!-- Rolling file dedicated to Conductor logs -->
+        <RollingFile name="ConductorLog"
+                     fileName="${LOG_DIR}/conductor.log"
+                     filePattern="${LOG_DIR}/conductor-%d{yyyy-MM-dd}.log.gz">
+            <PatternLayout>
+                <Pattern>${LOG_PATTERN}</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!-- reduce noise -->
+        <Logger name="org.springframework" level="error"/>
+        <Logger name="org.hibernate" level="error"/>
+
+        <!-- Conductor logs go to conductor.log -->
+        <Logger name="com.netflix.conductor" level="debug" additivity="false">
+            <AppenderRef ref="ConductorLog"/>
+<!--            <AppenderRef ref="Console"/>-->
+        </Logger>
+
+        <!-- Root logger for everything else -->
+        <Root level="info">
+            <AppenderRef ref="AppLog"/>
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>

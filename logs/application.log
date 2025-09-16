@@ -1,0 +1,24 @@
+2025-09-15T14:06:58.775 | INFO  | workflow() | task() | Starting CoreApplication using Java 17.0.7 with PID 28172 (D:\core\core\target\classes started by TawfikH in D:\core)
+2025-09-15T14:06:58.803 | INFO  | workflow() | task() | No active profile set, falling back to 1 default profile: "default"
+2025-09-15T14:07:00.678 | INFO  | workflow() | task() | HikariPool-1 - Starting...
+2025-09-15T14:07:01.196 | INFO  | workflow() | task() | HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@60c73e58
+2025-09-15T14:07:01.196 | INFO  | workflow() | task() | HikariPool-1 - Start completed.
+2025-09-15T14:07:03.645 | INFO  | workflow() | task() | Started CoreApplication in 5.74 seconds (process running for 7.769)
+2025-09-15T14:07:03.645 | INFO  | workflow() | task() | Starting conductor. . .
+2025-09-15T14:07:04.102 | WARN  | workflow() | task() | No URLs will be polled as dynamic configuration sources.
+2025-09-15T14:07:04.102 | INFO  | workflow() | task() | To enable URLs as dynamic configuration sources, define System property archaius.configurationSource.additionalUrls or make config.properties available on classpath.
+2025-09-15T14:07:04.114 | INFO  | workflow() | task() | DynamicPropertyFactory is initialized with configuration sources: com.netflix.config.ConcurrentCompositeConfiguration@14eb96e9
+2025-09-15T14:07:39.648 | INFO  | workflow() | task() | HikariPool-1 - Shutdown initiated...
+2025-09-15T14:07:39.655 | INFO  | workflow() | task() | HikariPool-1 - Shutdown completed.
+2025-09-15T14:08:04.973 | INFO  | workflow() | task() | Starting CoreApplication using Java 17.0.7 with PID 25804 (D:\core\core\target\classes started by TawfikH in D:\core)
+2025-09-15T14:08:04.990 | INFO  | workflow() | task() | No active profile set, falling back to 1 default profile: "default"
+2025-09-15T14:08:05.998 | INFO  | workflow() | task() | HikariPool-1 - Starting...
+2025-09-15T14:08:06.311 | INFO  | workflow() | task() | HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@6d074b14
+2025-09-15T14:08:06.312 | INFO  | workflow() | task() | HikariPool-1 - Start completed.
+2025-09-15T14:08:08.005 | INFO  | workflow() | task() | Started CoreApplication in 3.434 seconds (process running for 4.267)
+2025-09-15T14:08:08.021 | INFO  | workflow() | task() | Starting conductor. . .
+2025-09-15T14:08:08.288 | WARN  | workflow() | task() | No URLs will be polled as dynamic configuration sources.
+2025-09-15T14:08:08.288 | INFO  | workflow() | task() | To enable URLs as dynamic configuration sources, define System property archaius.configurationSource.additionalUrls or make config.properties available on classpath.
+2025-09-15T14:08:08.295 | INFO  | workflow() | task() | DynamicPropertyFactory is initialized with configuration sources: com.netflix.config.ConcurrentCompositeConfiguration@641bc9a8
+2025-09-15T15:10:59.026 | INFO  | workflow() | task() | HikariPool-1 - Shutdown initiated...
+2025-09-15T15:10:59.035 | INFO  | workflow() | task() | HikariPool-1 - Shutdown completed.
