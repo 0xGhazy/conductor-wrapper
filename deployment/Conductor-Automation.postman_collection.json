@@ -1,0 +1,221 @@
+{
+	"info": {
+		"_postman_id": "5c12e1f5-b14c-4a0e-aed0-4ef06bfe6647",
+		"name": "Conductor-Automation",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32569985"
+	},
+	"item": [
+		{
+			"name": "Task Definitions",
+			"item": [
+				{
+					"name": "Create Task Definition",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"calculateTotalAmountOfCustomerInvoices\",\r\n    \"description\": \"calculate the total amount of customer invoices\",\r\n    \"timeoutPolicy\": \"TIME_OUT_WF\",\r\n    \"retryCount\": 1,\r\n    \"responseTimeoutSeconds\": 600,\r\n    \"inputKeys\": [\r\n        \"customer_id\"\r\n    ],\r\n    \"outputKeys\": [\r\n        \"totalAmount\"\r\n    ],\r\n    \"ownerEmail\": \"conductor.wrapper@vodafone.com\",\r\n    \"retryLogic\": \"FIXED\",\r\n    \"retryDelaySeconds\": 60,\r\n    \"timeoutSeconds\": 3600,\r\n    \"rateLimitFrequencyInSeconds\": 1,\r\n    \"rateLimitPerFrequency\": 0,\r\n    \"setConcurrentExecLimit\": 5,\r\n    \"createdBy\": \"Conductor Wrapper\",\r\n    \"updatedBy\": \"Conductor Wrapper\",\r\n    \"updateTime\": 0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9090/api/tasks",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"tasks"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Task Definition By Name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/tasks/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"tasks",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tasks Definitions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/tasks",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"tasks"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Task Definition By Name",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/tasks/getCustomerInvoicesWithPaymentDetails",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"tasks",
+								"getCustomerInvoicesWithPaymentDetails"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Workflow Definitions",
+			"item": [
+				{
+					"name": "Create Workflow Definition",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"fetchCustomerTotalInvoices\",\r\n  \"description\": \"Fetch customer invoices and compute totals\",\r\n  \"version\": 1,\r\n  \"tasks\": [\r\n    {\r\n      \"name\": \"calculateTotalAmountOfCustomerInvoices\",\r\n      \"taskReferenceName\": \"t1\",\r\n      \"type\": \"SIMPLE\",\r\n      \"inputParameters\": {\r\n          \"customer_id\": \"${workflow.input.customer_id}\"\r\n      }\r\n    }\r\n  ],\r\n  \"inputParameters\": [\r\n    \"customer_id\"\r\n  ],\r\n  \"outputParameters\": {\r\n    \"totalAmount\": \"${t1.output.totalAmount}\"\r\n  },\r\n  \"ownerEmail\": \"conductor.wrapper@vodafone.com\",\r\n  \"timeoutPolicy\": \"ALERT_ONLY\",\r\n  \"schemaVersion\": 2,\r\n  \"createTime\": 1726650000000,\r\n  \"updateTime\": 0,\r\n  \"createdBy\": \"Conductor Wrapper\",\r\n  \"updatedBy\": \"Conductor Wrapper\",\r\n  \"restartable\": true,\r\n  \"workflowStatusListenerEnabled\": false,\r\n  \"timeoutSeconds\": 300,\r\n  \"variables\": {},\r\n  \"inputTemplate\": {}\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9090/api/workflows",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"workflows"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Execution",
+			"item": [
+				{
+					"name": "Execute Workflow",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"fetchCustomerTotalInvoices\",\r\n    \"input\": {\r\n        \"customer_id\": 1\r\n    },\r\n    \"priority\": 0,\r\n    \"rateLimited\": false,\r\n    \"workflowVersion\": 2\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/workflow",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"workflow"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Database Action",
+			"item": [
+				{
+					"name": "Cache Refresh",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Test DB Call with parameters",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"customer_id\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9090/api/action/database/{{query_id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"action",
+								"database",
+								"{{query_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
