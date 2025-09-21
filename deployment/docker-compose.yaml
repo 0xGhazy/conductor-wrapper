@@ -1,71 +1,29 @@
-version: '2.3'
-
 services:
   conductor-server:
-    environment:
-      - CONFIG_PROP=config-redis.properties
-      - JAVA_OPTS=-Dpolyglot.engine.WarnInterpreterOnly=false
     image: ccctechcenter/conductor:server-v3.21.2.RELEASE
     container_name: conductor-server
+    environment:
+      - CONFIG_PROP=config-postgres.properties
+      - JAVA_OPTS=-Dpolyglot.engine.WarnInterpreterOnly=false
     build:
       context: ../
       dockerfile: docker/server/Dockerfile
       args:
         YARN_OPTS: ${YARN_OPTS}
-    networks:
-      - internal
+    networks: [internal]
     ports:
-      - 8080:8080
-      - 8127:5000
+      - "8080:8080"
+      - "8127:5000"
+    volumes:
+      - ./config/config-postgres.properties:/app/config/config-postgres.properties:ro
     healthcheck:
-      test: ["CMD", "curl","-I" ,"-XGET", "http://localhost:8080/health"]
-      interval: 60s
-      timeout: 30s
-      retries: 12
-    links:
-      - conductor-elasticsearch:es
-      - conductor-redis:rs
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
     depends_on:
-      conductor-elasticsearch:
-        condition: service_healthy
-      conductor-redis:
-        condition: service_healthy
       postgres:
         condition: service_healthy
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1k"
-        max-file: "3"
-
-  conductor-redis:
-    image: redis:6.2.3-alpine
-    volumes:
-      - ../server/config/redis.conf:/usr/local/etc/redis/redis.conf
-    networks:
-      - internal
-    ports:
-      - 7379:6379
-    healthcheck:
-      test: [ "CMD", "redis-cli","ping" ]
-
-  conductor-elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.11
-    environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
-      - xpack.security.enabled=false
-      - discovery.type=single-node
-    volumes:
-      - esdata-conductor:/usr/share/elasticsearch/data
-    networks:
-      - internal
-    ports:
-      - 9201:9200
-    healthcheck:
-      test: curl http://localhost:9200/_cluster/health -o /dev/null
-      interval: 5s
-      timeout: 5s
-      retries: 12
     logging:
       driver: "json-file"
       options:
@@ -80,18 +38,17 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=conductor_core
     ports:
-      - 5432:5432
-    networks:
-      - internal
+      - "5432:5432"
+    networks: [internal]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d conductor_core"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
 volumes:
-  esdata-conductor:
-    driver: local
+  postgres_data:
+  oracle_data:
 
 networks:
   internal:
