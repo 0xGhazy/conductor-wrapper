@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="INFO">
     <Properties>
-        <Property name="LOG_PATTERN">%d{yyyy-MM-dd'T'HH:mm:ss.SSS} | %-5level | workflow(%X{workflow}) | task(%X{task}) | %msg%n</Property>
-        <Property name="LOG_DIR">./ogs</Property>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd'T'HH:mm:ss.SSS} | %-5level%notEmpty{ | traceId(%X{traceId})} %notEmpty{ | task(%X{task})} | %c | %msg%n</Property>
+        <Property name="LOG_DIR">./logs</Property>
     </Properties>
 
     <Appenders>
@@ -46,8 +46,9 @@
         <!-- Conductor logs go to conductor.log -->
         <Logger name="com.netflix.conductor" level="debug" additivity="false">
             <AppenderRef ref="ConductorLog"/>
-<!--            <AppenderRef ref="Console"/>-->
         </Logger>
+
+        <Logger name="com.conductor.core" level="trace"/>
 
         <!-- Root logger for everything else -->
         <Root level="info">
