@@ -26,3 +26,70 @@ replay_pid*
 .idea
 target
 logs
+.vscode
+
+# Frontend
+# --- Node & package managers
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# --- Build outputs
+/build/
+dist/
+.out/
+.out-static/
+
+# --- Tool caches
+.npm/
+.pnpm-store/
+.yarn-integrity
+.pnp.*
+.eslintcache
+.stylelintcache
+.nyc_output/
+coverage/
+.vite/
+.vitest/
+*.tsbuildinfo
+
+# --- Frameworks (keep if used)
+.next/
+out/
+.nuxt/
+.svelte-kit/
+.docusaurus/
+.storybook/
+.cache/
+.parcel-cache/
+.vitepress/
+.vuepress/
+gatsby-*.log
+
+# --- Env files
+.env
+.env.*
+!.env.example
+
+# --- Misc
+*.log
+*.tgz
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# --- Binary addons
+build/Release/
+
+# --- Others you might see
+lib-cov/
+bower_components/
+web_modules/
