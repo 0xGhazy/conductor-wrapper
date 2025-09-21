@@ -173,7 +173,6 @@ public class MetaDataService {
 
         for (TaskDto dto: taskDtos){
             WorkflowTask wt = taskAdapter.toTask(dto);
-            log.info("Task: {}", wt);
             tasks.add(wt);
         }
 

@@ -5,6 +5,7 @@ import com.conductor.core.action.db.dto.Query;
 import com.conductor.core.action.db.dto.QueryResult;
 import com.conductor.core.action.db.entity.DataSourceDef;
 import com.conductor.core.action.db.entity.QueryStore;
+import com.conductor.core.action.db.enums.QueryExecStatus;
 import com.conductor.core.action.db.enums.QueryType;
 import com.conductor.core.action.db.repository.DatasourceRepository;
 import com.conductor.core.action.db.repository.QueryStoreRepository;
@@ -58,7 +59,6 @@ public class DatabaseActionService {
 
     @Transactional
     public QueryResult run(Query query) {
-        log.info("Attempting to execute query={}", query);
         String queryId = query.getId();
         Map<String, Object> params = query.getParams();
 
@@ -71,7 +71,6 @@ public class DatabaseActionService {
         QueryType queryType = fetchedQuery.getQueryType();
 
         var template = registry.template(fetchedQuery.getDataSource().getName());
-        log.info("Query datasource loaded successfully");
 
         String sql = fetchedQuery.getSql().trim().toLowerCase(Locale.ROOT);
 
@@ -86,9 +85,11 @@ public class DatabaseActionService {
             selectResultSet = template.queryForList(sql, params);
             queryResult.setResultSet(selectResultSet);
             queryResult.setSize(selectResultSet.size());
+            queryResult.setStatus(QueryExecStatus.SUCCESS);
         } else {
             int result = template.update(sql, new MapSqlParameterSource(params));
             queryResult.setAffectedRowsCount(result);
+            queryResult.setStatus(QueryExecStatus.SUCCESS);
         }
         return queryResult;
     }
