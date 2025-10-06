@@ -18,6 +18,7 @@
     <url>http://maven.apache.org</url>
     <modules>
         <module>database</module>
+        <module>http</module>
     </modules>
 
     <properties>

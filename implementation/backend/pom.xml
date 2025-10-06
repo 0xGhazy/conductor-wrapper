@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>action/database</module>
+        <module>action/http</module>
         <module>core</module>
         <module>conductor</module>
         <module>common</module>
