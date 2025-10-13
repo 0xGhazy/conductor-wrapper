@@ -21,4 +21,9 @@ public class ApiKey implements AuthStrategy {
         }
         return req.header(header, apiKey);
     }
+
+    @Override
+    public boolean testAuthentication() {
+        return true;
+    }
 }

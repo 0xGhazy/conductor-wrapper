@@ -15,7 +15,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Service
 @RequiredArgsConstructor
 public class AuthStrategyManager {
-
     private final Cache<String, AuthConnection> connections;
 
     public void registerAuthConnection(String name, AuthStrategy strategy, long expiresAtEpochSec) {

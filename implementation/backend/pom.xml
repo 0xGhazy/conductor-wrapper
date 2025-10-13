@@ -11,6 +11,7 @@
     <modules>
         <module>action/database</module>
         <module>action/http</module>
+        <module>action/jexl</module>
         <module>core</module>
         <module>conductor</module>
         <module>common</module>

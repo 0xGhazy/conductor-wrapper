@@ -1,10 +1,10 @@
 package com.vcs.flowpilot.action.http.api;
 
-import com.vcs.flowpilot.action.http.security.contract.AuthStrategy;
 import com.vcs.flowpilot.action.http.enums.XHttpMethod;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 
 
+@Slf4j
 @Builder
 @Service
 @AllArgsConstructor
