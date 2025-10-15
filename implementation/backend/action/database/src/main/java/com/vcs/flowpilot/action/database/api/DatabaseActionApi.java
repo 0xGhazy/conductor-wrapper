@@ -24,12 +24,10 @@ import java.util.*;
 
 @Log4j2
 @Component
-public class DatabaseApi {
+public class DatabaseActionApi {
 
-    @Autowired
-    private DatasourceService datasourceService;
-    @Autowired
-    private QueryService queryService;
+    @Autowired private DatasourceService datasourceService;
+    @Autowired private QueryService queryService;
 
     @Transactional
     public QueryResult run(Query query) {

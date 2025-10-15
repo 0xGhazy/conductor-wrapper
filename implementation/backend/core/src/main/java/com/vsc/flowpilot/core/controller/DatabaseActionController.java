@@ -1,7 +1,7 @@
-package com.vcs.flowpilot.action.database.internal.controller;
+package com.vsc.flowpilot.core.controller;
 
 import com.vcs.flowpilot.action.database.internal.dto.DatasourceDto;
-import com.vcs.flowpilot.action.database.internal.dto.ResponseDatasourceDto;
+import com.vcs.flowpilot.action.database.internal.dto.DatasourceDtoResponse;
 import com.vcs.flowpilot.action.database.internal.service.DatasourceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,52 +24,52 @@ public class DatabaseActionController {
     /* ********************************************** Datasource API ********************************************** */
 
     @PostMapping(value = "/datasource/cache/refresh", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ResponseDatasourceDto>> refreshCache() {
+    public ResponseEntity<List<DatasourceDtoResponse>> refreshCache() {
         log.info("Datasource cache refresh request received");
         long start = System.currentTimeMillis();
-        List<ResponseDatasourceDto> result = datasourceService.cacheRefresh();
+        List<DatasourceDtoResponse> result = datasourceService.cacheRefresh();
         long duration = (System.currentTimeMillis() - start);
         log.info("Datasource cache refresh request completed successfully - duration {}ms", duration);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping(value = "/datasource", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseDatasourceDto> registerDatasource(@Valid @RequestBody DatasourceDto payload) {
+    public ResponseEntity<DatasourceDtoResponse> registerDatasource(@Valid @RequestBody DatasourceDto payload) {
         log.info("Datasource registration request received - payload = {}" ,payload);
         long start = System.currentTimeMillis();
-        ResponseDatasourceDto registeredDs = datasourceService.saveAndRegisterDatasource(payload);
-        URI location = URI.create("/api/action/db/" + registeredDs.getName());
+        DatasourceDtoResponse registeredDs = datasourceService.saveAndRegisterDatasource(payload);
+        URI location = URI.create("/api/action/db/" + registeredDs.name());
         long duration = (System.currentTimeMillis() - start);
         log.info("Datasource registration request completed successfully - duration {}ms", duration);
         return ResponseEntity.created(location).body(registeredDs);
     }
 
     @GetMapping(value = "/datasource/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseDatasourceDto> fetchRegisteredDatasource(@PathVariable("name") String name) {
+    public ResponseEntity<DatasourceDtoResponse> fetchRegisteredDatasource(@PathVariable("name") String name) {
         log.info("Fetch datasource by name request received - name = {}" ,name);
         long start = System.currentTimeMillis();
-        ResponseDatasourceDto registeredDs = datasourceService.fetchDatasourceByName(name);
+        DatasourceDtoResponse registeredDs = datasourceService.fetchDatasourceByName(name);
         long duration = (System.currentTimeMillis() - start);
         log.info("Datasource fetching request completed successfully - duration {}ms", duration);
         return ResponseEntity.ok(registeredDs);
     }
 
     @GetMapping(value = "/datasource", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ResponseDatasourceDto>> fetchAllRegisteredDatasource() {
+    public ResponseEntity<List<DatasourceDtoResponse>> fetchAllRegisteredDatasource() {
         log.info("Fetch all data sources request received");
         long start = System.currentTimeMillis();
-        List<ResponseDatasourceDto> fetchedAllDataSources = datasourceService.fetchAllDataSources();
+        List<DatasourceDtoResponse> fetchedAllDataSources = datasourceService.fetchAllDataSources();
         long duration = (System.currentTimeMillis() - start);
         log.info("Datasource fetching all request completed successfully - duration {}ms", duration);
         return ResponseEntity.ok(fetchedAllDataSources);
     }
 
     @PatchMapping(value = "/datasource/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseDatasourceDto> updateRegisteredDatasource(@PathVariable("name") String name,
+    public ResponseEntity<DatasourceDtoResponse> updateRegisteredDatasource(@PathVariable("name") String name,
                                                                             @Valid @RequestBody DatasourceDto datasourceDto) {
         log.info("Update data sources by name request received - name = {}", name);
         long start = System.currentTimeMillis();
-        ResponseDatasourceDto updated = datasourceService.updateDatasourceByName(name, datasourceDto);
+        DatasourceDtoResponse updated = datasourceService.updateDatasourceByName(name, datasourceDto);
         long duration = (System.currentTimeMillis() - start);
         log.info("Update datasource request completed successfully - duration {}ms", duration);
         return ResponseEntity.ok(updated);

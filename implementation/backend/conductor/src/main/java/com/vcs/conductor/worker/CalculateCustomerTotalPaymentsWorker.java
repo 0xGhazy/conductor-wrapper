@@ -1,6 +1,6 @@
 package com.vcs.conductor.worker;
 
-import com.vcs.flowpilot.action.database.api.DatabaseApi;
+import com.vcs.flowpilot.action.database.api.DatabaseActionApi;
 import com.vcs.flowpilot.action.database.internal.dto.Query;
 import com.vcs.flowpilot.action.database.internal.dto.QueryResult;
 import com.vcs.flowpilot.action.database.internal.enums.QueryExecStatus;
@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
-import com.vcs.conductor.worker.contract.WrappedWorker;
+import com.vcs.conductor.contract.WrappedWorker;
 
 import java.util.List;
 import java.util.Map;
@@ -22,13 +22,11 @@ import java.util.Map;
 @Component
 public class CalculateCustomerTotalPaymentsWorker extends WrappedWorker {
 
-    @Autowired private DatabaseApi databaseApi;
+    @Autowired private DatabaseActionApi databaseActionApi;
 
     public CalculateCustomerTotalPaymentsWorker() {
         // TODO: Must pass the task name here
         super("calculateTotalAmountOfCustomerInvoices");
-        // DatabaseApi databaseApi
-//        this.databaseApi = databaseApi;
     }
 
     @Override
@@ -45,7 +43,7 @@ public class CalculateCustomerTotalPaymentsWorker extends WrappedWorker {
                 .build();
 
         log.debug("Attempting to execute query={} with parameters={}", query.getId(), query.getParams());
-        QueryResult queryResult = databaseApi.run(query);
+        QueryResult queryResult = databaseActionApi.run(query);
 
         if (queryResult.getStatus().equals(QueryExecStatus.SUCCESS)){
             log.info("Query executed successfully");

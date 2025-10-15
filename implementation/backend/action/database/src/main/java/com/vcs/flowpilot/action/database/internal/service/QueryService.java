@@ -8,19 +8,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Log4j2
 @Service
 @RequiredArgsConstructor
 public class QueryService {
 
-    private final static Map<String, QueryStore> queriesCache = new HashMap<>();
+    private final ConcurrentHashMap<String, QueryStore> queriesCache = new ConcurrentHashMap<>();
     private final QueryStoreRepository queryStoreRepository;
 
     @PostConstruct
-    private void initQueryCache() {
+    private void init() {
         log.info("Attempting to load queries to cache");
-        queriesCache.clear();
 
         List<QueryStore> queryStoreList = queryStoreRepository.findAll();
         log.debug("Queries fetched successfully, Queries count = {}", queryStoreList.size());
@@ -43,7 +43,7 @@ public class QueryService {
     }
 
     public void evict() {
-        initQueryCache();
+        init();
     }
 
 }

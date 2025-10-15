@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 @Data
@@ -23,13 +22,17 @@ public class DatasourceDto {
     private String username;
     @NotBlank(message = "Password can not be null")
     private String password;
+    @Builder.Default
     private Integer connectionTimeout = 3000;
+    @Builder.Default
     private Integer idealTimeout = 3000;
     @NotNull(message = "Type is required")
     private DatasourceType type = DatasourceType.POSTGRES;
     private String schema;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Override
     public String toString() {

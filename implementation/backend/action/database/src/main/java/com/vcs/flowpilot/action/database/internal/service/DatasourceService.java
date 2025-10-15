@@ -2,13 +2,9 @@ package com.vcs.flowpilot.action.database.internal.service;
 
 import com.vcs.flowpilot.action.database.internal.adapter.DatasourceAdapter;
 import com.vcs.flowpilot.action.database.internal.dto.DatasourceDto;
-import com.vcs.flowpilot.action.database.internal.dto.ResponseDatasourceDto;
+import com.vcs.flowpilot.action.database.internal.dto.DatasourceDtoResponse;
 import com.vcs.flowpilot.action.database.internal.entity.DataSourceDef;
-import com.vcs.flowpilot.action.database.internal.enums.DatasourceStatus;
-import com.vcs.flowpilot.action.database.internal.exception.DatasourceDuplicationException;
-import com.vcs.flowpilot.action.database.internal.exception.DatasourceJdbcTemplateNotFound;
-import com.vcs.flowpilot.action.database.internal.exception.DatasourceNotFoundException;
-import com.vcs.flowpilot.action.database.internal.exception.DatasourceUpdateRequestNameMissMatch;
+import com.vcs.flowpilot.action.database.internal.exception.*;
 import com.vcs.flowpilot.action.database.internal.repository.DatasourceRepository;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -17,13 +13,10 @@ import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
-
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Log4j2
 @Component
@@ -32,21 +25,42 @@ public class DatasourceService {
 
     private final DatasourceRepository datasourceRepository;
     private final DatasourceAdapter adapter;
-    private static final Map<String, HikariDataSource> pools = new ConcurrentHashMap<>();
-    private static final Map<String, NamedParameterJdbcTemplate> templates = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, HikariDataSource> pools = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, NamedParameterJdbcTemplate> templates = new ConcurrentHashMap<>();
 
     @PostConstruct
     private void init() {
         log.info("Init loading data sources");
-        templates.clear();
         List<DataSourceDef> loadedDataSources = datasourceRepository.findAll();
-        log.info("Data sources loaded successfully, data sources count = {}", loadedDataSources.size());
+        Set<String> loadedNames = new HashSet<>();
 
-        for (DataSourceDef ds: loadedDataSources) {
-            registerDatasource(ds);
+        // register or update each declared datasource
+        for (DataSourceDef ds : loadedDataSources) {
+            String name = ds.getName().toLowerCase();
+            loadedNames.add(name);
+            try {
+                registerDatasource(ds);
+            } catch (Exception ex) {
+                log.warn("Skipping datasource [{}] during init: {}", name, ex.getMessage());
+            }
         }
 
-        log.info("Data sources registration completed successfully");
+        Set<String> existing = new HashSet<>(pools.keySet());
+        existing.removeAll(loadedNames);
+        for (String obsolete : existing) {
+            HikariDataSource removed = pools.remove(obsolete);
+            templates.remove(obsolete);
+            if (removed != null) {
+                try {
+                    removed.close();
+                    log.info("Closed obsolete pool {}", obsolete);
+                } catch (Exception e) {
+                    throw new GenericErrorException("Failed closing obsolete pool " + obsolete, e);
+                }
+            }
+        }
+
+        log.info("Data sources init completed. active pools={}", pools.size());
     }
 
     public NamedParameterJdbcTemplate getJdbcTemplate(String datasource) {
@@ -57,61 +71,28 @@ public class DatasourceService {
         return jdbcTemplate;
     }
 
-    public List<ResponseDatasourceDto> cacheRefresh() {
+    public List<DatasourceDtoResponse> cacheRefresh() {
         init();
         return fetchAllDataSources();
     }
 
-    public DataSourceDef registerDatasource(DataSourceDef ds) {
-        String datasourceName = ds.getName();
-        log.info("Attempting to register datasource : {}", datasourceName);
-        try {
-
-            HikariDataSource oldPool = pools.remove(datasourceName);
-            if (oldPool != null) {
-                log.warn("Closing old pool for datasource {}", datasourceName);
-                oldPool.close();
-            }
-
-            HikariConfig hc = getHikariConfig(ds);
-            log.debug("Datasource [{}] configuration prepared", datasourceName);
-
-            HikariDataSource hds = new HikariDataSource(hc);
-
-            templates.put(datasourceName, new NamedParameterJdbcTemplate(hds));
-            log.info("Datasource [{}] registered successfully", datasourceName);
-        } catch (Exception e) {
-            String message = e.getMessage();
-            log.error("Failed to register datasource [{}] with URL={} user={}. Cause={}",
-                    datasourceName, ds.getUrl(), ds.getUsername(), e.getMessage(), e);
-            if (message.contains("password authentication failed")) {
-                log.error("Invalid credintials for datasource [{}]", datasourceName);
-            }
-        }
-        return ds;
-    }
-
-    public ResponseDatasourceDto fetchDatasourceByName(String name) {
+    public DatasourceDtoResponse fetchDatasourceByName(String name) {
         DataSourceDef result =  datasourceRepository.findByName(name).orElseThrow(
                 () -> new DatasourceNotFoundException("Datasource '" + name + "' is not found"));
-        ResponseDatasourceDto responseDto = adapter.toResponseDto(result);
-        responseDto.setStatus( templates.get(responseDto.getName()) != null ? DatasourceStatus.ACTIVE: DatasourceStatus.INACTIVE );
-        return responseDto;
+        return adapter.toDtoResponse(result, templates);
     }
 
-    public List<ResponseDatasourceDto> fetchAllDataSources() {
+    public List<DatasourceDtoResponse> fetchAllDataSources() {
         List<DataSourceDef> fetchedAllDataSources = datasourceRepository.findAll();
-        List<ResponseDatasourceDto> result = new ArrayList<>();
-
+        List<DatasourceDtoResponse> result = new ArrayList<>();
         for(DataSourceDef ds: fetchedAllDataSources){
-            ResponseDatasourceDto responseDto = adapter.toResponseDto(ds);
-            responseDto.setStatus( templates.get(responseDto.getName()) != null ? DatasourceStatus.ACTIVE: DatasourceStatus.INACTIVE );
+            DatasourceDtoResponse responseDto = adapter.toDtoResponse(ds, templates);
             result.add(responseDto);
         }
         return result;
     }
 
-    public ResponseDatasourceDto updateDatasourceByName(String name, DatasourceDto dto) {
+    public DatasourceDtoResponse updateDatasourceByName(String name, DatasourceDto dto) {
         DataSourceDef result =  datasourceRepository.findByName(name).orElseThrow(
                 () -> new DatasourceNotFoundException("Datasource '" + name + "' is not found"));
 
@@ -133,21 +114,17 @@ public class DatasourceService {
             result.setConnectionTimeout(dto.getConnectionTimeout());
         if(dto.getIdealTimeout() != null)
             result.setIdealTimeout(dto.getIdealTimeout());
-
         result.setUpdatedAt(LocalDateTime.now());
 
         datasourceRepository.save(result);
         log.info("Datasource {} updated successfully", result);
 
-        result = registerDatasource(result);
+        registerDatasource(result);
 
-        ResponseDatasourceDto resultWithStatus = adapter.toResponseDto(result);
-        resultWithStatus.setStatus( templates.get(result.getName()) != null ? DatasourceStatus.ACTIVE : DatasourceStatus.INACTIVE);
-
-        return resultWithStatus;
+        return adapter.toDtoResponse(result, templates);
     }
 
-    public ResponseDatasourceDto saveAndRegisterDatasource(DatasourceDto dto) {
+    public DatasourceDtoResponse saveAndRegisterDatasource(DatasourceDto dto) {
         String dsName = dto.getName();
         Optional<DataSourceDef> dataSourceOptional = datasourceRepository.findByName(dsName);
         if (dataSourceOptional.isPresent()) {
@@ -163,9 +140,7 @@ public class DatasourceService {
         ds.setCreatedAt(LocalDateTime.now());
         datasourceRepository.save(ds);
 
-        ResponseDatasourceDto result = adapter.toResponseDto(ds);
-        result.setStatus(isActiveDatasource ? DatasourceStatus.ACTIVE : DatasourceStatus.INACTIVE);
-        return result;
+        return adapter.toDtoResponse(ds, templates);
     }
 
     //----------------------------- Helpers --------------------------//
@@ -193,5 +168,51 @@ public class DatasourceService {
             case ORACLE   -> hc.setDriverClassName("oracle.jdbc.OracleDriver");
         }
         return hc;
+    }
+
+    private void registerDatasource(DataSourceDef ds) {
+        String name  = ds.getName().toLowerCase();
+        log.info("Registering datasource {}", name);
+
+        HikariDataSource newPool = null;
+        try {
+            HikariConfig hc = getHikariConfig(ds);
+            newPool = new HikariDataSource(hc);
+            NamedParameterJdbcTemplate newTpl = new NamedParameterJdbcTemplate(newPool);
+
+            // returning the old value after putting the new one.
+            HikariDataSource oldPool = pools.put(name, newPool);
+            templates.put(name, newTpl);
+
+            if (oldPool != null) {
+                log.warn("Closing old pool for datasource {}", name);
+                try {
+                    oldPool.close();
+                }
+                catch (Exception ex) {
+                    log.warn("Failed closing old pool", ex);
+                    throw new GenericErrorException("Failed closing old pool", ex);
+                }
+            }
+            log.info("Datasource [{}] registered successfully", name);
+
+        } catch (Exception e) {
+            String message = e.getMessage();
+            log.error("Failed to register datasource [{}] Cause={}", name, e.getMessage(), e);
+
+            if (message.contains("password authentication failed"))
+                throw new DatasourceConnectionException("Invalid credintials for datasource '" + name + "'");
+
+            if (newPool != null) {
+                try {
+                    newPool.close();
+                } catch (Exception ex) {
+                    log.warn("Failed closing new pool connection", ex);
+                    throw new GenericErrorException("Failed closing new pool connection", ex);
+                }
+            }
+
+            throw new DatasourceRegistrationFailedException("Failed to register datasource: " + name, e);
+        }
     }
 }

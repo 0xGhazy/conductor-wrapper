@@ -1,4 +1,4 @@
-package com.vcs.conductor.worker.contract;
+package com.vcs.conductor.contract;
 
 import com.netflix.conductor.client.worker.Worker;
 import com.netflix.conductor.common.metadata.tasks.Task;
