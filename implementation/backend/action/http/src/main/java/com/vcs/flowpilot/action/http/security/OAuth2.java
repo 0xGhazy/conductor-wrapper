@@ -1,6 +1,7 @@
 package com.vcs.flowpilot.action.http.security;
 
 import com.vcs.flowpilot.action.http.dto.TokenResponse;
+import com.vcs.flowpilot.action.http.entity.HttpConnection;
 import com.vcs.flowpilot.action.http.security.contract.AuthStrategy;
 import com.vcs.flowpilot.action.http.enums.XGrantType;
 import lombok.*;
@@ -22,12 +23,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Log4j2
 @Builder
 @AllArgsConstructor
-@RequiredArgsConstructor
 public class OAuth2 implements AuthStrategy {
-    private final WebClient webClient;
-    @Getter private volatile String accessToken;
-    @Getter private volatile String refreshToken;
-    @Getter @Builder.Default
+    private WebClient webClient = WebClient.builder().build();
+    @Getter
+    private volatile String accessToken;
+    @Getter
+    private volatile String refreshToken;
+    @Getter
+    @Builder.Default
     private volatile Instant expiresAt = Instant.EPOCH;
     private XGrantType grantType;
     private String tokenEndpoint;
@@ -47,6 +50,23 @@ public class OAuth2 implements AuthStrategy {
             });
     private final AtomicReference<ScheduledFuture<?>> refreshTask = new AtomicReference<>();
 
+    public OAuth2(HttpConnection src) {
+        this.accessToken = null;
+        this.refreshToken = null;
+        this.expiresAt   = java.time.Instant.EPOCH;
+        this.grantType     = src.getGrantType();
+        this.tokenEndpoint = src.getTokenEndpoint();
+        this.clientId      = src.getClientId();
+        this.clientSecret  = src.getClientSecret();
+        this.scope         = src.getScope();
+        this.username      = src.getUsername();
+        this.password      = src.getPassword();
+        this.code          = src.getCode();
+        this.redirectUri   = src.getRedirectUri();
+        this.codeVerifier  = src.getCodeVerifier();
+        testAuthentication();
+    }
+
 
     @Override
     public WebClient.RequestHeadersSpec<?> apply(WebClient.RequestHeadersSpec<?> req) {
@@ -61,7 +81,7 @@ public class OAuth2 implements AuthStrategy {
     }
 
     public TokenResponse fetchToken(boolean isRefreshToken) {
-        log.info("Attempting to fetch {} token", isRefreshToken ? "refresh" : "access");
+        log.debug("Attempting to fetch {} token", isRefreshToken ? "refresh" : "access");
         TokenResponse response = null;
         try {
             if (isRefreshToken) {
@@ -70,6 +90,7 @@ public class OAuth2 implements AuthStrategy {
                 response = fetchAccessToken();
             }
             seed(response);
+            log.debug("{} fetch successfully", isRefreshToken ? "refresh" : "access");
         } catch (WebClientResponseException.MethodNotAllowed e) {
             log.error("Web client MethodNotAllowed exception occurred: {}", e.getMessage());
 
@@ -233,6 +254,5 @@ public class OAuth2 implements AuthStrategy {
         if (!missing.isEmpty())
             throw new IllegalArgumentException("Missing required fields for " + grantType + ": " + missing);
     }
-
 
 }

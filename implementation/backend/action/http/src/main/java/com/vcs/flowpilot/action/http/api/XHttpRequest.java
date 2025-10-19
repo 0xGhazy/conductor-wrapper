@@ -1,23 +1,21 @@
 package com.vcs.flowpilot.action.http.api;
 
 import com.vcs.flowpilot.action.http.enums.XHttpMethod;
+import com.vcs.flowpilot.action.http.service.HttpConnectionService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.reactive.function.client.WebClient;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 
 @Slf4j
-@Builder
+@Getter
 @Service
 @AllArgsConstructor
 @EqualsAndHashCode
@@ -29,7 +27,7 @@ public class XHttpRequest {
     private Object body;
     private String connection;
     private boolean isBuilt = false;
-    private AuthStrategyManager authStrategyManager;
+    private HttpConnectionService httpConnectionService;
 
     private XHttpRequest() {}
 
@@ -40,7 +38,6 @@ public class XHttpRequest {
         private Map<String,String> headers = new HashMap<>();
         private Object body;
         private String connection;
-        private AuthStrategyManager authStrategyManager;
 
         public builder url(@NotBlank(message = "Request url is required") String url) {
             this.url = url;
@@ -68,11 +65,6 @@ public class XHttpRequest {
             return this;
         }
 
-        public builder authStrategyManager(AuthStrategyManager authStrategyManager) {
-            this.authStrategyManager = authStrategyManager;
-            return this;
-        }
-
         public builder connection(String connection) {
             this.connection = connection;
             return this;
@@ -93,7 +85,6 @@ public class XHttpRequest {
             x.headers = (this.headers == null) ? new HashMap<>() : new HashMap<>(this.headers);
             x.body = this.body;
             x.connection = this.connection;
-            x.authStrategyManager = this.authStrategyManager;
             x.isBuilt = true;
             return x;
         }
@@ -111,37 +102,6 @@ public class XHttpRequest {
             };
         }
     }
-
-    public String execute(WebClient client) {
-        ensureBuilt();
-        WebClient wc = (client != null) ? client : WebClient.builder().build();
-
-        WebClient.RequestBodySpec spec = wc
-                .method(this.method)
-                .uri(this.url)
-                .accept(MediaType.APPLICATION_JSON);
-
-        if (headers != null && !headers.isEmpty()) {
-            spec = spec.headers(h -> h.setAll(headers));
-        }
-
-        WebClient.RequestHeadersSpec<?> req =
-                (body == null ? spec : spec.bodyValue(body));
-
-        if (connection != null) {
-            req = authStrategyManager.applyAuthStrategy(connection ,req);
-        }
-
-        return req.retrieve().bodyToMono(String.class).block();
-    }
-
-
-    private void ensureBuilt() {
-        if (!isBuilt) {
-            throw new IllegalStateException("XHttpRequest must be built via builder.build() before execute()");
-        }
-    }
-
 
     @Override
     public String toString() {

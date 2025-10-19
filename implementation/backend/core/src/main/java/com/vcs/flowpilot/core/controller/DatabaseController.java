@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/action/db")
 @RequiredArgsConstructor
-public class DatabaseActionController {
+public class DatabaseController {
 
     private final DatasourceService datasourceService;
 

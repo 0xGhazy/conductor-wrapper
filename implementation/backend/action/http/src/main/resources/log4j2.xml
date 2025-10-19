@@ -30,7 +30,7 @@
         <Logger name="org.springframework" level="error"/>
         <Logger name="org.hibernate" level="error"/>
 
-        <Logger name="com.vodafone.cw.action.database" level="trace"/>
+        <Logger name="com.vodafone.cw.action.http" level="trace"/>
 
         <!-- Root logger for everything else -->
         <Root level="info">
