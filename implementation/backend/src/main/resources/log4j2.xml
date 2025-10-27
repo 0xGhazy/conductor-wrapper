@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="OFF">
+    <Properties>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd'T'HH:mm:ss.SSS} - %-5level%notEmpty{ - traceId(%X{traceId})}%notEmpty{ - task(%X{task})} - %c - %msg%n</Property>
+        <Property name="LOG_DIR">logs</Property>
+    </Properties>
+    <Appenders> <!-- Console Appender -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout>
+                <Pattern>${LOG_PATTERN}</Pattern>
+            </PatternLayout>
+        </Console> <!-- Rolling file for all logs -->
+        <RollingFile name="AppLog" fileName="${LOG_DIR}/conductor-wrapper.log"
+                     filePattern="${LOG_DIR}/conductor-wrapper-%d{yyyy-MM-dd}.log.gz">
+            <PatternLayout>
+                <Pattern>${LOG_PATTERN}</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="org.springframework" level="error"/>
+        <Logger name="org.hibernate" level="error"/>
+        <Logger name="com.vodafone.vcs.conductorwrapper" level="trace"/> <!-- Conductor logs go to conductor.log -->
+        <Logger name="com.netflix.conductor" level="debug" additivity="false">
+            <AppenderRef ref="ConductorLog"/>
+        </Logger> <!-- Root logger for everything else -->
+        <Root level="info">
+            <AppenderRef ref="AppLog"/>
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>
