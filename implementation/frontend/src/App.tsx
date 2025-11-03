@@ -2,6 +2,8 @@ import { AppBar, Toolbar, Button, Stack } from "@mui/material";
 import Sidebar from "./Components/Sidebar";
 import Canvas from "./Components/Canvas";
 import { useStudio } from "./Utils/store";
+import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
+
 
 const DRAWER_WIDTH = 360;
 
