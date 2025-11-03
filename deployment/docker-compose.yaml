@@ -49,7 +49,7 @@ services:
       retries: 10
 
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
+    image: bitnami/keycloak:latest
     container_name: keycloak
     command: start-dev
     environment:
