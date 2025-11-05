@@ -27,8 +27,10 @@ body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI,
 .max-w-\[220px\]{ max-width:220px }
 .grid{ display:grid }
 .flex{ display:flex }
+.justify-center{ justify-content: space-between}
 .flex-col{ flex-direction:column }
 .items-center{ align-items:center }
+.items-end{ align-items:stretch }
 .gap-2{ gap:.5rem }
 .h-full{ height:100% }
 .w-screen{ width:100vw }

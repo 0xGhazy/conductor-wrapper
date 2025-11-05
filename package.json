@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "prismjs": "^1.30.0"
+  }
+}

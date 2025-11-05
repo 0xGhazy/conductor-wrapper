@@ -1,6 +1,4 @@
 import { React, useCallback, useMemo, useRef, useState, useEffect } from "react";
-import DbActionProps from "./Components/PanelProps/DbActionProps";
-import TransformActionProps from "./Components/PanelProps/TransformActionProps";
 import TerminateActionProps from "./Components/PanelProps/TerminateActionProps";
 import BranchActionProps from "./Components/PanelProps/BranchActionProps";
 import RegexValidatorProps from "./Components/PanelProps/RegexValidatorProps";
@@ -13,27 +11,29 @@ import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle } from "
 import { ActionNode } from "./Components/flow/ActionNode";
 import { ReactFlow, Background, Controls, MiniMap, addEdge, useEdgesState, useNodesState, Handle, Position, Panel} from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Link as LinkIcon, Database as DatabaseIcon, Braces as BracesIcon, Play as PlayIcon, Trash2, Flag, CircleStop, Power, GitBranch, Shield, FileText, Clock, AlertCircle, Search, X, Upload, Terminal, Square } from "lucide-react";
+import { Link as LinkIcon, Database as DatabaseIcon, Braces as BracesIcon, Play as PlayIcon, Trash2, Flag, CircleStop, Power, GitBranch, Shield, FileText, Clock, AlertCircle, Search, X, Upload, Terminal, Square, Cloud } from "lucide-react";
 import Divider from '@mui/material/Divider';
 import {initialNodes, userDefinedActions} from "./Components/Fillers/FillerData";
 import { HttpActionNode, HttpActionProps } from "./Components/Actions/http/HttpActionNode";
+import { DatabaseActionProbs, DatabaseActionNode } from "./Components/Actions/database/DatabaseActionNode";
+import { JexlActionNode, JexlActionProbs } from "./Components/Actions/jexl/JexlActionNode";
+import { TerraformActionNode, TerraformActionProbs } from "./Components/Actions/terraform/TerraformActionNode"
 
-
-
-/** @typedef {"httpAction"|"dbAction"|"transformAction"|"terminateAction"|"branchAction"|"regexValidator"|"logger"|"delay"|"errorHandler"} NodeKind */
+/** @typedef {"terraformAction"|"httpAction"|"dbAction"|"transformAction"|"terminateAction"|"branchAction"|"regexValidator"|"logger"|"delay"|"errorHandler"} NodeKind */
 const DRAG_TYPE = "application/x-node-type";
 
 
 const PANEL_REGISTRY = {
   httpAction: HttpActionProps,
-  dbAction: DbActionProps,
-  transformAction: TransformActionProps,
+  dbAction: DatabaseActionProbs,
+  transformAction: JexlActionProbs,
   terminateAction: TerminateActionProps,
   branchAction: BranchActionProps,
   regexValidator: RegexValidatorProps,
   logger: LoggerProps,
   delay: DelayProps,
   errorHandler: ErrorHandlerProps,
+  terraformAction: TerraformActionProbs,
   "*": GenericUserActionProps,
 };
 
@@ -47,33 +47,6 @@ const StartFlagNode = () => (
     text="Start"
     handleType="source"
     handlePosition={Position.Bottom}
-  />
-);
-
-const DbActionNode = ({ data }) => (
-  <ActionNode
-    data={data}
-    icon={<DatabaseIcon size={16} />}
-    accent="#22c55e"
-    defaultTitle="DB Action"
-    targetHandlePosition={Position.Top}
-    sourceHandlePosition={Position.Bottom}
-  />
-);
-
-const TransformActionNode = ({ data }) => (
-  <ActionNode
-    data={data}
-    icon={<BracesIcon size={16} />}
-    accent="#a855f7"
-    defaultTitle="Transform"
-    targetHandlePosition={Position.Top}
-    sourceHandlePosition={Position.Bottom}
-    renderContent={(data) => (
-      <div className="px-3 py-2 text-xs text-gray-600 truncate max-w-[220px]">
-        {data?.config?.expression || "{out: input}"}
-      </div>
-    )}
   />
 );
 
@@ -109,7 +82,11 @@ const TerminateActionNode = ({ data }) => {
 const BranchActionNode = ({ data }) => {
   return (
     <div className="relative" style={{ pointerEvents: "all" }}>
-      <Handle type="target" position={Position.Top} />
+      <Handle
+        type="target"
+        position={Position.Top}
+        style={{ opacity: 0, pointerEvents: "auto" }}
+      />
       <div className="rounded-2xl border bg-white min-w-[220px]">
         <div
           className="flex items-center gap-2 px-3 py-2 border-b"
@@ -272,8 +249,9 @@ const UserDefinedActionNode = ({ data }) => {
 
 const nodeTypes = {
   httpAction: HttpActionNode,
-  dbAction: DbActionNode,
-  transformAction: TransformActionNode,
+  dbAction: DatabaseActionNode,
+  terraformAction: TerraformActionNode,
+  transformAction: JexlActionNode,
   terminateAction: TerminateActionNode,
   branchAction: BranchActionNode,
   regexValidator: RegexValidatorNode,
@@ -682,9 +660,10 @@ export default function App() {
   const allNodeTypes = useMemo(() => {
     const baseTypes = {
       httpAction: HttpActionNode,
-      dbAction: DbActionNode,
-      transformAction: TransformActionNode,
+      dbAction: DatabaseActionNode,
+      transformAction: JexlActionNode,
       terminateAction: TerminateActionNode,
+      terraformAction: TerraformActionNode,
       branchAction: BranchActionNode,
       regexValidator: RegexValidatorNode,
       logger: LoggerNode,
@@ -893,12 +872,9 @@ export default function App() {
     else if (kind === "dbAction")
       data = {
         kind: "dbAction",
-        name: "DB Action",
+        name: "Query",
         config: {
-          engine: "postgresql",
-          connection: "",
-          sql: "SELECT 1",
-          params: "{}",
+          query: "getCustomerBalance1"
         },
       };
     else if (kind === "terminateAction")
@@ -937,6 +913,11 @@ export default function App() {
         name: "Error Handler",
         config: { errorType: "Any error", fallbackValue: null },
       };
+    else if (kind === "terraformAction")
+      data = {
+        name: "Terrafoem",
+        config: { action: "Create new ES2 Instance", name: "Teraaform" },
+      };
     else {
       // Check if it's a user-defined action
       const userAction = userDefinedActions.find((a) => a.type === kind);
@@ -949,7 +930,7 @@ export default function App() {
       } else {
         data = {
           kind: "transformAction",
-          name: "Transform",
+          name: "JEXL",
           config: { expression: "({ out: input })" },
         };
       }
@@ -1646,8 +1627,13 @@ export default function App() {
             />
             <PaletteItem
               kind="dbAction"
-              label="Database"
+              label="Query"
               icon={<DatabaseIcon size={20} />}
+            />
+            <PaletteItem
+              kind="terraformAction"
+              label="Terraform"
+              icon={<Cloud size={20} />}
             />
             <PaletteItem
               kind="transformAction"

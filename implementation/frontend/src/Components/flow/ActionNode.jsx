@@ -19,7 +19,7 @@ export function NodeShell({ title, icon, accent, onRun }) {
             e.stopPropagation();
             onRun && onRun();
           }}
-          className="absolute right-2 top-1.5 p-1 rounded-md hover:bg-green-50 focus:outline-none"
+          className="relative right-2 top-1.5 p-1 rounded-md hover:bg-green-50 focus:outline-none"
           aria-label="run"
           title="run"
         >

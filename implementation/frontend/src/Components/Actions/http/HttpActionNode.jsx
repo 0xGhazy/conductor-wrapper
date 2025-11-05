@@ -68,7 +68,6 @@ export function HttpActionProps({ data, onChange }) {
 }
 
 
-
 export function HttpActionNode({ data }) {
     const method = String((data && data.config && data.config.method) || "GET").toUpperCase();
     const theme = METHOD_THEME[method] || METHOD_THEME.DEFAULT;
