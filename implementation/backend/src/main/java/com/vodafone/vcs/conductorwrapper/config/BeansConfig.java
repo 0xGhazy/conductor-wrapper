@@ -1,5 +1,6 @@
 package com.vodafone.vcs.conductorwrapper.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.client.automator.TaskRunnerConfigurer;
 import com.netflix.conductor.client.http.TaskClient;
 import com.netflix.conductor.client.worker.Worker;
@@ -23,6 +24,10 @@ import java.util.Map;
 @Slf4j
 @Configuration
 public class BeansConfig {
+
+    public ObjectMapper mapper() {
+        return new ObjectMapper();
+    }
 
     @Bean
     public ModelMapper modelMapper() {

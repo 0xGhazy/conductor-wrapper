@@ -33,7 +33,7 @@ docker compose up
 cd repository/implementation/backend/
 ```
 
-Perform maven clean install to install required dependances
+Perform maven clean install to install required dependencies
 
 ```bash
 mvn clean install

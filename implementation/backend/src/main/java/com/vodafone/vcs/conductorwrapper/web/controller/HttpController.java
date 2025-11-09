@@ -1,29 +1,37 @@
 package com.vodafone.vcs.conductorwrapper.web.controller;
 
-import com.vodafone.vcs.conductorwrapper.action.http.dto.XHttpRequest;
-import com.vodafone.vcs.conductorwrapper.action.http.dto.RequestDto;
 import com.vodafone.vcs.conductorwrapper.action.http.api.HttpActionApi;
+import com.vodafone.vcs.conductorwrapper.conductor.dto.WorkflowAction;
+import com.vodafone.vcs.conductorwrapper.conductor.service.ConductorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.util.Map;
 
 @Log4j2
 @RestController
-@RequestMapping("/api/action/http")
+@RequestMapping(value = "/api/actions/http", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 public class HttpController {
 
     private final HttpActionApi service;
+    private final ConductorService conductorService;
 
-    @PostMapping(value = "/execute", produces = MediaType.APPLICATION_JSON_VALUE)
-    public String executeRequest(@Valid @RequestBody RequestDto payload) {
-        log.info("Payload: {}", payload);
+    @PostMapping("/execute")
+    public ResponseEntity<?> execute(@Valid @RequestBody WorkflowAction payload) throws IOException, InterruptedException {
+        log.info("HTTP request execution received - payload={}", payload);
+        conductorService.executeWorkflow(payload);
+        return ResponseEntity.ok(Map.of("ok", true));
+    }
 
-        return "";
+
+    @GetMapping("/connections")
+    public ResponseEntity<?> listConnections() {
+        return ResponseEntity.ok(service.listConnections());
     }
 }

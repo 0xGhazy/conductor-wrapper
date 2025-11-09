@@ -1,0 +1,19 @@
+{
+    "name": "HttpWorker",
+    "description": "HTTP worker enables you to invoke HTTP requests",
+    "inputKeys": [
+        "HttpConfigs"
+    ],
+    "outputKeys": [
+        "HttpResult"
+    ],
+    "ownerEmail": "conductor.wrapper@vodafone.com",
+    "retryLogic": "FIXED",
+    "retryDelaySeconds": 60,
+    "timeoutSeconds": 3600,
+    "rateLimitFrequencyInSeconds": 1,
+    "rateLimitPerFrequency": 0,
+    "setConcurrentExecLimit": 5,
+    "createdBy": "Conductor Wrapper",
+    "updatedBy": "Conductor Wrapper"
+}

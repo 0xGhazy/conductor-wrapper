@@ -6,9 +6,11 @@ import com.vodafone.vcs.conductorwrapper.action.database.entity.QueryStore;
 import com.vodafone.vcs.conductorwrapper.action.database.enums.ErrorCode;
 import com.vodafone.vcs.conductorwrapper.action.database.enums.QueryExecStatus;
 import com.vodafone.vcs.conductorwrapper.action.database.enums.QueryType;
+import com.vodafone.vcs.conductorwrapper.action.database.repository.QueryStoreRepository;
 import com.vodafone.vcs.conductorwrapper.action.database.service.DatasourceService;
 import com.vodafone.vcs.conductorwrapper.action.database.service.QueryService;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.*;
@@ -18,14 +20,18 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import java.sql.SQLTimeoutException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Log4j2
 @Component
+@RequiredArgsConstructor
 public class DatabaseActionApi {
 
-    @Autowired private DatasourceService datasourceService;
-    @Autowired private QueryService queryService;
+    private final DatasourceService datasourceService;
+    private final QueryService queryService;
+    private final QueryStoreRepository queryRepository;
 
     @Transactional
     public QueryResult run(Query query) {
@@ -139,5 +145,11 @@ public class DatabaseActionApi {
                 log.info("Query {} executed in {} ms", queryId, elapsedMs);
             }
         }
+    }
+
+    public List<String> getchQueries() {
+        List<String> queries = new ArrayList<>();
+        for (QueryStore query: queryRepository.findAll()) queries.add(query.getName());
+        return queries;
     }
 }

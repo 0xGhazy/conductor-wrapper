@@ -6,6 +6,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import lombok.extern.log4j.Log4j2;
 import org.slf4j.MDC;
 
+import java.io.IOException;
 import java.util.Map;
 
 @Log4j2
@@ -30,14 +31,12 @@ public abstract class WrappedWorker implements Worker {
         MDC.put("task", taskDefName);
         try {
             log.info("==================== [{}][STARTED] ====================", wf);
-            log.info("INPUT: {}", task.getInputData());
             return doExecute(task);
         } finally {
             long duration = System.currentTimeMillis() - startTime;
             log.info("==================== [{}][FINISHED in {}ms] ====================", wf, duration);
-            log.info("Test This");
         }
     }
 
-    public abstract TaskResult doExecute(Task task);
+    public abstract TaskResult doExecute(Task task) ;
 }

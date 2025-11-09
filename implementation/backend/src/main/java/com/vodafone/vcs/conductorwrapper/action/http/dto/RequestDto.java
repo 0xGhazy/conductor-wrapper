@@ -24,7 +24,7 @@ public class RequestDto {
     @Builder.Default
     private Map<String, String> headers = new HashMap<>();
     @Builder.Default
-    private Object body = new HashMap<>();
+    private Map<String, Object> body = new HashMap<>();
     @Positive(message = "Request timeout must be positive number of seconds")
     private Integer timeout;
     private String connection;

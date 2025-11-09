@@ -85,7 +85,7 @@ public class OAuth2 implements AuthStrategy {
     }
 
     public TokenResponse fetchToken(boolean isRefreshToken) {
-        log.debug("Attempting to fetch {} token", isRefreshToken ? "refresh" : "access");
+//        log.debug("Attempting to fetch {} token", isRefreshToken ? "refresh" : "access");
         TokenResponse response = null;
         try {
             if (isRefreshToken) {
@@ -94,7 +94,7 @@ public class OAuth2 implements AuthStrategy {
                 response = fetchAccessToken();
             }
             seed(response);
-            log.debug("{} fetch successfully", isRefreshToken ? "refresh" : "access");
+//            log.debug("{} fetch successfully", isRefreshToken ? "refresh" : "access");
         } catch (WebClientResponseException.MethodNotAllowed e) {
             log.error("Web client MethodNotAllowed exception occurred: {}", e.getMessage());
 
@@ -123,7 +123,7 @@ public class OAuth2 implements AuthStrategy {
         try {
             TokenResponse t = (refreshToken != null) ? fetchToken(true) : fetchToken(false);
             this.accessToken  = t.accessToken();
-            log.info("Access Token for {}: {}", name, accessToken);
+//            log.info("Access Token for {}: {}", name, accessToken);
             if (t.refreshToken() != null && !t.refreshToken().isBlank()) this.refreshToken = t.refreshToken();
             long expiresIn = Math.max(1, t.expiresIn());
             this.expiresAt = Instant.now().plusSeconds(expiresIn);

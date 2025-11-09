@@ -2,7 +2,7 @@ import {Label, Input} from "../../Inputs";
 import { Braces as BracesIcon, Play as PlayIcon } from "lucide-react";
 import { Handle, Position } from "@xyflow/react";
 
-export function JexlActionProbs({ data, onChange }) {
+export function JexlActionProps({ data, onChange }) {
   const cfg = data.config || {};
   return (
     <div>
@@ -79,7 +79,7 @@ export function JexlActionNode({ data, onRun }) {
         <Handle
           type="source"
           position={Position.Bottom}
-          id="output"
+          id="jexlResult"
           style={{ bottom: "0px" }}
         />
       </div>

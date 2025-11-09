@@ -1,14 +1,12 @@
--- اختياري: إنشاء السكيمة
 CREATE SCHEMA IF NOT EXISTS core;
 
--- يتطلب امتلاك نوع UUID (موجود أصلاً) ويمكن استخدام gen_random_uuid() إن أردت قيمة افتراضية
 CREATE TABLE IF NOT EXISTS core.http_connections (
-  id           UUID PRIMARY KEY,                      -- أو DEFAULT gen_random_uuid()
+  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name         VARCHAR(200) NOT NULL,
-  strategy     VARCHAR(50),                           -- Enum كـ STRING
+  strategy     VARCHAR(50),
   api_key          TEXT,
   api_key_header    TEXT,
-  grant_type    VARCHAR(50),                          -- Enum كـ STRING
+  grant_type    VARCHAR(50),
   client_id         TEXT,
   username          TEXT,
   password          TEXT,

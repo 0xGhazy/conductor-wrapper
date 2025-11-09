@@ -1,0 +1,18 @@
+{
+    "name": "e3",
+    "input": {
+        "data": {
+            "url": "https://webhook.site/5141803d-2ed7-4b6b-8038-a3afe8130ba7",
+            "method": "GET",
+            "headers": {
+                "Accept": "application/json",
+                "x-name": "from-headers"
+            },
+            "body": null,
+            "connection": "keycloak-cli4"
+        }
+    },
+    "priority": 0,
+    "rateLimited": false,
+    "workflowVersion": 2
+}

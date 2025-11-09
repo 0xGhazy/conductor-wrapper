@@ -12,8 +12,6 @@ import java.util.UUID;
 public class ConductorWrapperApplication {
 
 	public static void main(String[] args) {
-        MDC.put("traceId", UUID.randomUUID().toString());
-        MDC.put("task", UUID.randomUUID().toString());
 		SpringApplication.run(ConductorWrapperApplication.class, args);
 	}
 

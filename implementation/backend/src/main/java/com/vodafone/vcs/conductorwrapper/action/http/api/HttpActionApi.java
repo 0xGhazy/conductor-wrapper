@@ -1,5 +1,6 @@
 package com.vodafone.vcs.conductorwrapper.action.http.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vodafone.vcs.conductorwrapper.action.http.dto.XHttpRequest;
 import com.vodafone.vcs.conductorwrapper.action.http.entity.HttpConnection;
 import com.vodafone.vcs.conductorwrapper.action.http.enums.AuthenticationStrategy;
@@ -17,10 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Log4j2
 @Component
@@ -30,6 +28,11 @@ public class HttpActionApi {
     private final WebClient webClient = WebClient.builder().build();
     private final HttpConnectionsRepository repository;
     private final static Map<String, AuthStrategy> connections = new HashMap<>();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    public Set<String> listConnections() {
+        return connections.keySet();
+    }
 
     public void registerConnection(String name, AuthStrategy strategy) {
         if (strategy instanceof OAuth2)
@@ -38,7 +41,13 @@ public class HttpActionApi {
             connections.put(name, (ApiKey) strategy);
     }
 
-    public Map<String, ? extends Serializable> execute(@NotNull XHttpRequest request) {
+    private static Object parseJsonOrReturnString(String s) {
+        if (s == null || s.isBlank()) return java.util.Map.of();
+        try { return MAPPER.readTree(s); }
+        catch (Exception ignore) { return s; }
+    }
+
+    public Map<String, Object> execute(@NotNull XHttpRequest request) {
         Map<String, String> headers = request.getHeaders();
         Object body = request.getBody();
         String connection = request.getConnection();
@@ -52,26 +61,29 @@ public class HttpActionApi {
         }
 
         WebClient.RequestHeadersSpec<?> req = (body == null ? spec : spec.bodyValue(body));
-        if (connection != null) req = applyAuthStrategy(connection, req);
+        if (!connection.equals("--NONE--")) {
+            req = applyAuthStrategy(connection, req);
+            log.info("I am apply the connection string");
+        }
 
         return req.exchangeToMono(resp -> {
-                    var status = resp.statusCode().value();
+                    int status = resp.statusCode().value();
                     return resp.bodyToMono(String.class)
                             .defaultIfEmpty("")
-                            .map(bodyStr -> Map.of(
+                            .map(bodyStr -> java.util.Map.of(
                                     "success", resp.statusCode().is2xxSuccessful(),
                                     "status", status,
-                                    "body", bodyStr
+                                    "body", parseJsonOrReturnString(bodyStr)
                             ));
                 })
                 .onErrorResume(WebClientResponseException.class, ex ->
-                        Mono.just(Map.of(
+                        Mono.just(java.util.Map.of(
                                 "success", false,
                                 "status", ex.getStatusCode().value(),
-                                "body", ex.getResponseBodyAsString()
+                                "body", parseJsonOrReturnString(ex.getResponseBodyAsString())
                         )))
                 .onErrorResume(Throwable.class, ex ->
-                        Mono.just(Map.of(
+                        Mono.just(java.util.Map.of(
                                 "success", false,
                                 "status", -1,
                                 "error", ex.getClass().getSimpleName(),

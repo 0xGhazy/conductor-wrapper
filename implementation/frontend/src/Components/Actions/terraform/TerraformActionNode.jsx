@@ -3,7 +3,7 @@ import { Cloud as TerraformIcon, Play as PlayIcon } from "lucide-react";
 import { Handle, Position } from "@xyflow/react";
 
 
-export function TerraformActionProbs({ data, onChange }) {
+export function TerraformActionProps({ data, onChange }) {
   const cfg = data.config || {};
 
   const update = (patch) =>

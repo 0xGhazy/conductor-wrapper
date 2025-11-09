@@ -1,0 +1,30 @@
+{
+    "name": "HTTP_DB_Workflow",
+    "version": 1,
+    "schemaVersion": 2,
+    "inputParameters": [
+        "data"
+    ],
+    "tasks": [
+        {
+            "name": "HttpWorker",
+            "taskReferenceName": "http",
+            "type": "SIMPLE",
+            "inputParameters": {
+                "HttpConfigs": "${workflow.input.data.HttpConfigs}"
+            }
+        },
+        {
+            "name": "DatabaseWorker",
+            "taskReferenceName": "db",
+            "type": "SIMPLE",
+            "inputParameters": {
+                "DatabaseConfigs": "${workflow.input.data.DatabaseConfigs}"
+            }
+        }
+    ],
+    "outputParameters": {
+        "HttpResult": "${http.output.result}",
+        "DbResult": "${db.output.result}"
+    }
+}

@@ -1,39 +1,43 @@
 import { React, useCallback, useMemo, useRef, useState, useEffect } from "react";
+
 import TerminateActionProps from "./Components/PanelProps/TerminateActionProps";
 import BranchActionProps from "./Components/PanelProps/BranchActionProps";
-import RegexValidatorProps from "./Components/PanelProps/RegexValidatorProps";
 import LoggerProps from "./Components/PanelProps/LoggerProps";
 import DelayProps from "./Components/PanelProps/DelayProps";
 import ErrorHandlerProps from "./Components/PanelProps/ErrorHandlerProps";
 import GenericUserActionProps from "./Components/PanelProps/GenericUserActionProps";
+
 import { FlagNode } from "./Components/flow/FlagNode";
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle } from "./Components/Inputs";
 import { ActionNode } from "./Components/flow/ActionNode";
 import { ReactFlow, Background, Controls, MiniMap, addEdge, useEdgesState, useNodesState, Handle, Position, Panel} from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Link as LinkIcon, Database as DatabaseIcon, Braces as BracesIcon, Play as PlayIcon, Trash2, Flag, CircleStop, Power, GitBranch, Shield, FileText, Clock, AlertCircle, Search, X, Upload, Terminal, Square, Cloud } from "lucide-react";
-import Divider from '@mui/material/Divider';
+import { Link as LinkIcon, Database as DatabaseIcon, Braces as BracesIcon, Play as PlayIcon, Flag, Power, GitBranch, Shield, FileText, Clock, AlertCircle, X, Upload, Terminal, Cloud } from "lucide-react";
+
 import {initialNodes, userDefinedActions} from "./Components/Fillers/FillerData";
 import { HttpActionNode, HttpActionProps } from "./Components/Actions/http/HttpActionNode";
-import { DatabaseActionProbs, DatabaseActionNode } from "./Components/Actions/database/DatabaseActionNode";
-import { JexlActionNode, JexlActionProbs } from "./Components/Actions/jexl/JexlActionNode";
-import { TerraformActionNode, TerraformActionProbs } from "./Components/Actions/terraform/TerraformActionNode"
+import { DatabaseActionProps, DatabaseActionNode } from "./Components/Actions/database/DatabaseActionNode";
+import { RegexActionNode, RegexActionProps } from "./Components/Actions/regex/RegexActionNode";
+import { TerraformActionNode, TerraformActionProps } from "./Components/Actions/terraform/TerraformActionNode"
+import { JexlActionNode, JexlActionProps } from "./Components/Actions/jexl/JexlActionNode";
 
-/** @typedef {"terraformAction"|"httpAction"|"dbAction"|"transformAction"|"terminateAction"|"branchAction"|"regexValidator"|"logger"|"delay"|"errorHandler"} NodeKind */
+
+/** @typedef {"terraformAction"|"httpAction"|"dbAction"|"jexl"|"terminateAction"|"branchAction"|"regexValidator"|"logger"|"delay"|"errorHandler"} NodeKind */
 const DRAG_TYPE = "application/x-node-type";
 
 
 const PANEL_REGISTRY = {
   httpAction: HttpActionProps,
-  dbAction: DatabaseActionProbs,
-  transformAction: JexlActionProbs,
+  dbAction: DatabaseActionProps,
+  regexValidator: RegexActionProps,
+  terraformAction: TerraformActionProps,
+  jexl: JexlActionProps,
+
   terminateAction: TerminateActionProps,
   branchAction: BranchActionProps,
-  regexValidator: RegexValidatorProps,
   logger: LoggerProps,
   delay: DelayProps,
   errorHandler: ErrorHandlerProps,
-  terraformAction: TerraformActionProbs,
   "*": GenericUserActionProps,
 };
 
@@ -152,24 +156,6 @@ const DelayNode = ({ data }) => {
   );
 };
 
-const RegexValidatorNode = ({ data }) => (
-  <ActionNode
-    data={data}
-    icon={<Shield size={16} />}
-    accent="#3b82f6"
-    defaultTitle="Regex Validator"
-    targetHandlePosition={Position.Top}
-    sourceHandlePosition={Position.Bottom}
-    renderContent={(data) => (
-      <div className="px-3 py-2 text-xs text-gray-600 truncate max-w-[220px]">
-        <span className="inline-block px-2 py-0.5 bg-blue-50 border border-blue-200 rounded mr-2">
-          {data?.config?.pattern || "/.*/"}
-        </span>
-      </div>
-    )}
-  />
-);
-
 const LoggerNode = ({ data }) => (
   <ActionNode
     data={data}
@@ -246,22 +232,6 @@ const UserDefinedActionNode = ({ data }) => {
 };
 
 // **********************************************************************
-
-const nodeTypes = {
-  httpAction: HttpActionNode,
-  dbAction: DatabaseActionNode,
-  terraformAction: TerraformActionNode,
-  transformAction: JexlActionNode,
-  terminateAction: TerminateActionNode,
-  branchAction: BranchActionNode,
-  regexValidator: RegexValidatorNode,
-  logger: LoggerNode,
-  delay: DelayNode,
-  errorHandler: ErrorHandlerNode,
-  startFlag: StartFlagNode,
-};
-
-
 
 function PaletteItem({ kind, label, icon }) {
   const onDragStart = (e) => {
@@ -600,16 +570,30 @@ export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChangeBase] = useEdgesState([]);
   const [selectedId, setSelectedId] = useState(null);
+  const flowRef = useRef(null);
+  const [userActionSearch, setUserActionSearch] = useState("");
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const searchInputRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [logs, setLogs] = useState([]);
+  const [showPanel, setShowPanel] = useState(false);
+  const [activePanelTab, setActivePanelTab] = useState('terminal');
+  const [terminalHistory, setTerminalHistory] = useState([]);
+  const [terminalInput, setTerminalInput] = useState("");
+  const [terminalHistoryIndex, setTerminalHistoryIndex] = useState(-1);
+  const [terminalOutput, setTerminalOutput] = useState([{ type: 'output', text: 'Terminal ready. Connect to backend to execute commands.' }]);
+  const terminalInputRef = useRef(null);
+  const terminalContainerRef = useRef(null);
   
   // Helper function to check if a node would be orphaned (no incoming edges)
   const wouldBeOrphaned = useCallback((nodeId, currentEdges) => {
-    // Start node can be orphaned (it's the root)
+    // Start node can not be orphaned (it's the root)
     if (nodeId === "start") return false;
     
     // Check if node has any incoming edges
     return !currentEdges.some(edge => edge.target === nodeId);
   }, []);
-  
+
   // Wrapped onEdgesChange to prevent orphan nodes
   const onEdgesChange = useCallback((changes) => {
     // Filter out changes that would create orphan nodes
@@ -641,31 +625,17 @@ export default function App() {
       onEdgesChangeBase(validChanges);
     }
   }, [edges, nodes, wouldBeOrphaned, onEdgesChangeBase]);
-  const flowRef = useRef(null);
-  const [userActionSearch, setUserActionSearch] = useState("");
-  const [showAutocomplete, setShowAutocomplete] = useState(false);
-  const searchInputRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const [logs, setLogs] = useState([]);
-  const [showPanel, setShowPanel] = useState(false);
-  const [activePanelTab, setActivePanelTab] = useState('terminal');
-  const [terminalHistory, setTerminalHistory] = useState([]);
-  const [terminalInput, setTerminalInput] = useState("");
-  const [terminalHistoryIndex, setTerminalHistoryIndex] = useState(-1);
-  const [terminalOutput, setTerminalOutput] = useState([{ type: 'output', text: 'Terminal ready. Connect to backend to execute commands.' }]);
-  const terminalInputRef = useRef(null);
-  const terminalContainerRef = useRef(null);
 
   // Build dynamic node types including user-defined actions
   const allNodeTypes = useMemo(() => {
     const baseTypes = {
       httpAction: HttpActionNode,
       dbAction: DatabaseActionNode,
-      transformAction: JexlActionNode,
+      jexl: JexlActionNode,
       terminateAction: TerminateActionNode,
       terraformAction: TerraformActionNode,
       branchAction: BranchActionNode,
-      regexValidator: RegexValidatorNode,
+      regexValidator: RegexActionNode,
       logger: LoggerNode,
       delay: DelayNode,
       errorHandler: ErrorHandlerNode,
@@ -837,10 +807,12 @@ export default function App() {
     },
     [nodes]
   );
+
   const onDragOver = useCallback((e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
   }, []);
+
   const onDrop = useCallback((e) => {
     e.preventDefault();
     const kind = e.dataTransfer.getData(DRAG_TYPE);
@@ -854,28 +826,20 @@ export default function App() {
       y: e.clientY - bounds.top - 40,
     };
 
-    const id = `${kind}-${Date.now()}`;
+    const id = `${kind}_${Date.now()}`;
     let data;
+
     if (kind === "httpAction")
       data = {
         kind: "httpAction",
-        name: "HTTP Action",
-        config: {
-          method: "GET",
-          url: "",
-          headers: "{}",
-          query: "{}",
-          body: "",
-          timeout: 30,
-        },
-      };
+        name: "HTTP",
+        config: { method: "GET", url: "", headers: "{}", query: "{}", body: "{}", timeout: 30, connection: "--NONE--" },
+    };
     else if (kind === "dbAction")
       data = {
         kind: "dbAction",
         name: "Query",
-        config: {
-          query: "getCustomerBalance1"
-        },
+        config: { query: "getCustomerBalance1"},
       };
     else if (kind === "terminateAction")
       data = {
@@ -915,8 +879,8 @@ export default function App() {
       };
     else if (kind === "terraformAction")
       data = {
-        name: "Terrafoem",
-        config: { action: "Create new ES2 Instance", name: "Teraaform" },
+        name: "Terraform",
+        config: { action: "Create new ES2 Instance", name: "Terraform" },
       };
     else {
       // Check if it's a user-defined action
@@ -926,12 +890,6 @@ export default function App() {
           kind: userAction.type,
           name: userAction.name,
           config: { ...userAction.defaultConfig },
-        };
-      } else {
-        data = {
-          kind: "transformAction",
-          name: "JEXL",
-          config: { expression: "({ out: input })" },
         };
       }
     }
@@ -970,7 +928,6 @@ export default function App() {
   // Handle node click with useCallback to prevent re-renders
   const handleNodeClick = useCallback((event, node) => {
     event.stopPropagation();
-    // console.log('Node clicked:', node.id, 'Current selected:', selectedId);
     setSelectedId(node.id);
   }, [selectedId]);
 
@@ -1172,10 +1129,10 @@ export default function App() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [selectedId, handleDelete, showPanel, activePanelTab, handleTerminalHistoryNavigation]);
 
-  const flowComplete = useMemo(
-    () => edges.some((e) => e.target === "end"),
-    [edges]
-  );
+  // const flowComplete = useMemo(
+  //   () => edges.some((e) => e.target === "end"),
+  //   [edges]
+  // );
 
   // Validate that no nodes are orphaned (have no incoming edges, except start)
   const validateOrphanNodes = useCallback((nodesToCheck, edgesToCheck) => {
@@ -1301,40 +1258,96 @@ export default function App() {
     };
   }, [nodes, edges, validateOrphanNodes]);
 
-  const handleRun = useCallback(() => {
+
+  const EXPORT_ENDPOINT = "http://localhost:9090/api/ui/run";
+  
+  async function sendExport(payload) {
+
+    const signal = (AbortSignal && AbortSignal.timeout)
+      ? AbortSignal.timeout(15000)
+      : undefined;
+  
+    const res = await fetch(EXPORT_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal,
+    });
+  
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      throw new Error(`HTTP ${res.status}: ${errText || res.statusText}`);
+    }
+    try {
+      return await res.json();
+    } catch {
+      return {};
+    }
+  }
+
+  const handleRun = useCallback(async () => {
     const validation = validateFlowHasDatabaseAction();
     if (!validation.valid) {
       alert(validation.message);
       return;
     }
-    
-    // Clear previous logs when running a new flow
+  
     clearLogs();
-    
-    // Find all logger nodes in the workflow
-    const loggerNodes = nodes.filter(n => n.type === "logger");
-    
-    // Simulate logger execution (when backend is connected, this will come from actual execution)
+    const payload = buildExportPayload();
+    try {
+      addLog("INFO", "Client", "Exporting workflow…", payload.meta);
+      const result = await sendExport(payload);
+      addLog("INFO", "API", "Export OK", result);
+      alert("Export sent successfully");
+    } catch (err) {
+      addLog("ERROR", "API", err && err.message ? err.message : "Export failed");
+      alert(`Export failed: ${err && err.message ? err.message : "Unknown error"}`);
+    }
+  
+    const loggerNodes = nodes.filter((n) => n.type === "logger");
     loggerNodes.forEach((loggerNode) => {
-      const level = loggerNode.data?.config?.level || "INFO";
-      const message = loggerNode.data?.config?.message || "No message";
-      const nodeName = loggerNode.data?.name || loggerNode.id;
-      
-      // Add log entry
-      setTimeout(() => {
-        addLog(level, nodeName, message, loggerNode.data?.config);
-      }, Math.random() * 1000); // Simulate async execution
+      const level = (loggerNode.data && loggerNode.data.config && loggerNode.data.config.level) || "INFO";
+      const message = (loggerNode.data && loggerNode.data.config && loggerNode.data.config.message) || "No message";
+      const nodeName = (loggerNode.data && loggerNode.data.name) || loggerNode.id;
+      setTimeout(() => addLog(level, nodeName, message, loggerNode.data && loggerNode.data.config), Math.random() * 1000);
     });
-    
-    // Proceed with running the flow
-    alert("Run flow – connect to backend API later");
   }, [validateFlowHasDatabaseAction, nodes, clearLogs, addLog]);
+
+
+  // const handleRun = useCallback(() => {
+  //   const validation = validateFlowHasDatabaseAction();
+  //   if (!validation.valid) {
+  //     alert(validation.message);
+  //     return;
+  //   }
+    
+  //   // Clear previous logs when running a new flow
+  //   clearLogs();
+    
+  //   // Find all logger nodes in the workflow
+  //   const loggerNodes = nodes.filter(n => n.type === "logger");
+    
+  //   // Simulate logger execution (when backend is connected, this will come from actual execution)
+  //   loggerNodes.forEach((loggerNode) => {
+  //     const level = loggerNode.data?.config?.level || "INFO";
+  //     const message = loggerNode.data?.config?.message || "No message";
+  //     const nodeName = loggerNode.data?.name || loggerNode.id;
+      
+  //     // Add log entry
+  //     setTimeout(() => {
+  //       addLog(level, nodeName, message, loggerNode.data?.config);
+  //     }, Math.random() * 1000); // Simulate async execution
+  //   });
+    
+  //   // Proceed with running the flow
+  //   alert("Run flow – connect to backend API later");
+  // }, [validateFlowHasDatabaseAction, nodes, clearLogs, addLog]);
 
 
 
   const buildGraph = (nodesArr, edgesArr) => {
-    const out = new Map();            // adjacency
-    const indeg = new Map();          // للترتيب الطوبولوجي
+    const out = new Map();
+    const indeg = new Map();
     nodesArr.forEach(n => { out.set(n.id, []); indeg.set(n.id, 0); });
     edgesArr.forEach(e => {
       if (!out.has(e.source)) out.set(e.source, []);
@@ -1344,7 +1357,7 @@ export default function App() {
     return { out, indeg };
   };
   
-  // يخرج كل المسارات من start حتى كل النهايات
+
   const enumeratePathsFromStart = (nodesArr, edgesArr, startId = "start") => {
     const { out } = buildGraph(nodesArr, edgesArr);
     const paths = [];
@@ -1353,11 +1366,11 @@ export default function App() {
   
     while (stack.length) {
       const { id, path } = stack.pop();
-      if (visiting.has(id)) continue;     // حماية من الدورات
+      if (visiting.has(id)) continue;
       visiting.add(id);
   
       const nexts = out.get(id) || [];
-      if (nexts.length === 0) {           // نهاية مسار
+      if (nexts.length === 0) {
         paths.push(path.slice());
       } else {
         nexts.forEach(n => stack.push({ id: n.to, path: [...path, n.to] }));
@@ -1367,10 +1380,9 @@ export default function App() {
     return paths;
   };
   
-  // ترتيب طوبولوجي يبدأ من start فقط
+
   const topoFromStart = (nodesArr, edgesArr, startId = "start") => {
     const { out, indeg } = buildGraph(nodesArr, edgesArr);
-    // نحصر تحت-الجراف القابل للوصول من start
     const reachable = new Set();
     const q0 = [startId];
     while (q0.length) {
@@ -1396,12 +1408,6 @@ export default function App() {
     }
     return order;
   };
-
-
-
-
-
-
 
   const buildExportPayload = () => {
     const paths = enumeratePathsFromStart(nodes, edges);
@@ -1598,7 +1604,6 @@ export default function App() {
     event.target.value = '';
   }, [importFromJSON]);
 
-
   return (
     <div
       className="w-screen h-screen grid"
@@ -1636,14 +1641,9 @@ export default function App() {
               icon={<Cloud size={20} />}
             />
             <PaletteItem
-              kind="transformAction"
+              kind="jexl"
               label="JEXL"
               icon={<BracesIcon size={20} />}
-            />
-            <PaletteItem
-              kind="terminateAction"
-              label="Terminate"
-              icon={<Power size={20} />}
             />
             <PaletteItem
               kind="branchAction"
@@ -1670,8 +1670,12 @@ export default function App() {
               label="Error Handler"
               icon={<AlertCircle size={20} />}
             />
+            <PaletteItem
+              kind="terminateAction"
+              label="Terminate"
+              icon={<Power size={20} />}
+            />
           {<br />}
-          <Divider />
 
 
             {/* Separator with Search */}

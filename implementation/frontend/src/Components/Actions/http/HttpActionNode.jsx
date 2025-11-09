@@ -1,16 +1,62 @@
-import React from "react";
-import { Link as LinkIcon } from "lucide-react";
-import { Position } from "@xyflow/react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link as LinkIcon, Play as PlayIcon } from "lucide-react";
 import JsonInput from "../../JsonInput";
 import {Label, Input} from "../../Inputs";
-import { ActionNode } from "../../flow/ActionNode";
+import { Handle, Position } from "@xyflow/react";
 
+const CONN_URL = "http://localhost:9090/api/actions/http";
+const NONE = "--NONE--";
 
 export function HttpActionProps({ data, onChange }) {
-  const cfg = data.config || {};
+  const cfg = data?.config ?? {};
   const update = (patch) => onChange({ config: { ...cfg, ...patch } });
 
-  // TODO: Implement list connection API call here
+  const [items, setItems] = React.useState([NONE]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  const fetchConnections = React.useCallback(async (signal) => {
+    setLoading(true); setError("");
+    try {
+      const res = await fetch(CONN_URL + "/connections", { signal });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const names = Array.isArray(json)
+        ? json.map((x) => (typeof x === "string" ? x : x?.name)).filter(Boolean)
+        : [];
+      setItems([NONE, ...Array.from(new Set(names))]);
+    } catch (e) {
+      if (e.name !== "AbortError") setError(String(e.message || e));
+    } finally { setLoading(false); }
+  }, []);
+
+  React.useEffect(() => {
+    const ctrl = new AbortController();
+    fetchConnections(ctrl.signal);
+    const onFocus = () => fetchConnections(new AbortController().signal);
+    window.addEventListener("focus", onFocus);
+    const id = setInterval(() => {
+      fetchConnections(new AbortController().signal);
+    }, 60_000);
+
+    return () => { clearInterval(id); window.removeEventListener("focus", onFocus); ctrl.abort(); };
+  }, [fetchConnections]);
+
+  const onConnChange = (e) => {
+    const v = e.target.value;
+    update({ connection: v === NONE ? null : v });
+  };
+
+  // optional: refresh when user opens the select
+  const onConnFocus = () => fetchConnections(new AbortController().signal);
+
+  const options = React.useMemo(() => {
+    const set = new Set(items);
+    if (cfg.connection && !set.has(cfg.connection)) {
+      return [NONE, cfg.connection, ...items.filter((x) => x !== NONE)];
+    }
+    return items;
+  }, [items, cfg.connection]);
 
   return (
     <>
@@ -21,7 +67,7 @@ export function HttpActionProps({ data, onChange }) {
           onChange={(e) => update({ method: e.target.value })}
           className="w-full px-3 py-2 border rounded-lg"
         >
-          {["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"].map((m) => (
+          {["GET","POST","PUT","PATCH","DELETE","OPTIONS","HEAD"].map((m) => (
             <option key={m} value={m}>{m}</option>
           ))}
         </select>
@@ -41,7 +87,7 @@ export function HttpActionProps({ data, onChange }) {
       <JsonInput label="Body (JSON)"    value={cfg.body}    onChange={(v) => update({ body: v })} allowEmpty />
 
       <div>
-        <Label>Timeout (sec)</Label>
+        <Label>Timeout (Ms)</Label>
         <Input
           type="number"
           placeholder={30}
@@ -50,18 +96,18 @@ export function HttpActionProps({ data, onChange }) {
         />
       </div>
 
-      <div>
-        <Label>Connection</Label>
-        <select
-          value={"loyalty-ck"}
-          placeholder="connection string"
-          onChange={(e) => update({ connection: e.target.value })}
-          className="w-full px-3 py-2 border rounded-lg"
-        >
-          {["loyalty-ck", "shipment_and_track_kc"].map((m) => (
-            <option key={m} value={m}>{m}</option>
-          ))}
-        </select>
+        <div>
+          <Label>Connection</Label>
+          <select
+            value={cfg.connection ?? NONE}
+            onChange={onConnChange}
+            className="w-full px-3 py-2 border rounded-lg"
+          >
+            {options.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+          {loading && <div className="text-xs text-gray-500 mt-1">Loading…</div>}
       </div>
     </>
   );
@@ -69,46 +115,127 @@ export function HttpActionProps({ data, onChange }) {
 
 
 export function HttpActionNode({ data }) {
-    const method = String((data && data.config && data.config.method) || "GET").toUpperCase();
-    const theme = METHOD_THEME[method] || METHOD_THEME.DEFAULT;
+    const apiUrl = CONN_URL+ "/execute";
 
-    // TODO: Implement RUN method for this action
-    const runHttp = (node) => {
-      const method = String(node?.config?.method || "GET").toUpperCase();
-      console.log("execute HTTP node only", {
-        method,
-        url: node?.config?.url,
-        headers: node?.config?.headers,
-        body: node?.config?.body,
-        connection: node?.config.connection,
-        timeout: node?.config.timeout,
-      });
+    const toJson = (v, fallback) => {
+      if (v == null || v === "") return fallback;
+      if (typeof v === "object") return v;
+      try { return JSON.parse(v); } catch { return fallback; }
     };
-  
+    
+    const handleRun = async (e) => {
+      e.stopPropagation();
+    
+      const cfg = data?.config ?? {};
+      const payload = {
+        type: "HTTP_ACTION",
+        config: {
+          url: cfg.url ?? "",
+          method: String(cfg.method ?? "GET").toUpperCase(),
+          headers: toJson(cfg.headers, {}),
+          query:   toJson(cfg.query,   {}),
+          body:    toJson(cfg.body,    {}),
+          connection: cfg.connection ?? "--NONE--",
+          timeout: Number(cfg.timeout ?? 5),
+        }
+      };
+    
+      console.groupCollapsed(`Run HTTP node: ${data?.name || "HTTP"}`);
+      console.log("payload", payload);
+      console.groupEnd();
+    
+      try {
+        const timeoutMs = (payload.timeout ?? 30) * 1000;
+        const signal = typeof AbortSignal?.timeout === "function"
+          ? AbortSignal.timeout(timeoutMs)
+          : (() => {
+              const ctrl = new AbortController();
+              setTimeout(() => ctrl.abort(), timeoutMs);
+              return ctrl.signal;
+            })();
+    
+        const res = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal,
+        });
+    
+        const contentType = res.headers.get("content-type") || "";
+        const dataOut = contentType.includes("application/json")
+          ? await res.json()
+          : await res.text();
+    
+        if (!res.ok) {
+          console.error("HTTP execute failed", { status: res.status, dataOut });
+          alert(`HTTP execute failed: ${res.status}\n${typeof dataOut === "string" ? dataOut : JSON.stringify(dataOut, null, 2)}`);
+          return;
+        }
+    
+        console.log("HTTP execute success", dataOut);
+        alert(`HTTP execute success:\n${typeof dataOut === "string" ? dataOut : JSON.stringify(dataOut, null, 2)}`);
+      } catch (err) {
+        console.error("HTTP execute error", err);
+        alert(`HTTP execute error: ${err?.name || "Error"}\n${err?.message || String(err)}`);
+      }
+    
+      if (typeof onRun === "function") onRun(data);
+    };
+
+
     return (
-      <ActionNode
-        data={data}
-        icon={<LinkIcon size={16} />}
-        accent={theme.accent}
-        defaultTitle="HTTP"
-        targetHandlePosition={Position.Top}
-        sourceHandlePosition={Position.Bottom}
-        containerStyle={{ "--accent": theme.accent }}
-        containerClassName="transition-shadow hover:ring-2 ring-[--accent]"
-        onRun={runHttp}
-      />
+      <div className="relative" style={{ pointerEvents: "all" }}>
+        <Handle
+          type="target"
+          position={Position.Top}
+          style={{ opacity: 0, pointerEvents: "auto" }}
+        />
+  
+        <div className="relative rounded-2xl border bg-white min-w-[140px] overflow-hidden">
+          <div
+            className="flex items-center justify-between overflow-hidden relative"
+            style={{ height: "42px" }}
+          >
+            {/* Left side: dynamic icon + label */}
+            <div className="flex items-center gap-2 px-3">
+              <div
+                className="p-1 rounded-lg flex items-center justify-center"
+                style={{ background: "#8b5cf620", width: "15px", height: "20px" }}
+              >
+                   <LinkIcon color="#df1111" />
+              </div>
+              <span className="font-medium text-sm">
+                {data?.name || "HTTP"}
+              </span>
+            </div>
+  
+            {/* Run button */}
+            <button
+              type="button"
+              onClick={handleRun}
+              className="flex items-center justify-center h-full px-4 hover:bg-green-50 transition-colors absolute right-0 top-0"
+              style={{
+                background: "white",
+                border: "none",
+                borderTopRightRadius: "1rem",
+                borderBottomRightRadius: "1rem",
+              }}
+              aria-label="run"
+              title="Run"
+            >
+              <PlayIcon className="w-4 h-4" style={{ color: "#00de25ff" }} />
+            </button>
+          </div>
+        </div>
+  
+        <div className="relative pb-4">
+          <Handle
+            type="source"
+            position={Position.Bottom}
+            id="httpResult"
+            style={{ bottom: "0px" }}
+          />
+        </div>
+      </div>
     );
 }
-
-
-/* Helpers */
-const METHOD_THEME = {
-    GET:      { accent: "#00FF17", badge: "bg-green-50 border-sky-200 text-sky-700" },
-    POST:     { accent: "#ef4444", badge: "bg-rose-50 border-rose-200 text-rose-700" },
-    PUT:      { accent: "#f59e0b", badge: "bg-amber-50 border-amber-200 text-amber-700" },
-    PATCH:    { accent: "#8b5cf6", badge: "bg-violet-50 border-violet-200 text-violet-700" },
-    DELETE:   { accent: "#BD421E", badge: "bg-red-50 border-red-200 text-red-700" },
-    OPTIONS:  { accent: "#f43f5e", badge: "bg-pink-50 border-red-200 text-red-700" },
-    HEAD:     { accent: "#00FF17", badge: "bg-green-50 border-green-200 text-green-700" },
-    DEFAULT:  { accent: "#64748b", badge: "bg-slate-50 border-slate-200 text-slate-700" },
-};
