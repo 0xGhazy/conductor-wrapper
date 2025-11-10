@@ -15,7 +15,7 @@ public final class DatasourceState {
     private volatile LocalDateTime lastChecked;
 
     public DatasourceState(String name) {
-        this.name = name; this.status = DatasourceStatus.REGISTERED;
+        this.name = name; this.status = DatasourceStatus.ACTIVE;
         this.lastChecked = LocalDateTime.now();
     }
     public void ok() { this.status = DatasourceStatus.ACTIVE; this.lastError=null; this.lastChecked=LocalDateTime.now(); }

@@ -1,34 +1,32 @@
-package com.vodafone.vcs.conductorwrapper.action.database.entity;
+package com.vodafone.vcs.conductorwrapper.action.database.dto;
 
 import com.vodafone.vcs.conductorwrapper.action.database.enums.QueryType;
-import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
 @Data
-@Table(name = "query_store", schema = "core")
-@Entity
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class QueryStore {
-    @Id private String name;
-    @Column(name="sql_query")
+public class QueryStoreDto {
+    @NotBlank(message = "Name is required")
+    private String name;
+    @NotBlank(message = "Sql query is required")
     private String sqlQuery;
-    @Column(name="timeout_seconds")
-    private int timeoutSeconds;
-    @Column(name="datasource")
+    @Min(0) @Builder.Default
+    private Integer timeoutSeconds = 3;
+    @NotBlank(message = "Datasource is required")
     private String dataSource;
-    @Column(name = "query_type")
-    @Enumerated(EnumType.STRING)
+    @NotNull(message = "Query type is required")
     private QueryType queryType;
-    @Builder.Default @CreationTimestamp
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
     private Instant updatedAt;
 
     @Override

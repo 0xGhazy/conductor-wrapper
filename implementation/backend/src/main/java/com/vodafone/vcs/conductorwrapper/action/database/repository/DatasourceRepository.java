@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface DatasourceRepository extends JpaRepository<DataSourceDef, String> {
     Optional<DataSourceDef> findByName(String name);
+    boolean existsByName(String name);
 }

@@ -3,27 +3,32 @@ package com.vodafone.vcs.conductorwrapper.action.database.entity;
 import com.vodafone.vcs.conductorwrapper.action.database.enums.DatasourceType;
 import com.vodafone.vcs.conductorwrapper.common.converters.EncryptionConverter;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Data
 @Table(name = "datasource", schema = "core")
 @Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class DataSourceDef {
-    @Id
-    private String name;
-//    @Convert(converter = EncryptionConverter.class)
+    @Id private String name;
+    @Convert(converter = EncryptionConverter.class)
     private String url;
-//    @Convert(converter = EncryptionConverter.class)
+    @Convert(converter = EncryptionConverter.class)
     private String username;
-//    @Convert(converter = EncryptionConverter.class)
+    @Convert(converter = EncryptionConverter.class)
     private String password;
-
-//    @Convert(converter = EncryptionConverter.class)
+    @Convert(converter = EncryptionConverter.class)
     private String schema;
     @Column(name = "connection_timeout")
     private Integer connectionTimeout;
@@ -36,9 +41,9 @@ public class DataSourceDef {
     private Integer maximumPoolSize;
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @Override
     public String toString() {

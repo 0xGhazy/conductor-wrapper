@@ -6,12 +6,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @Getter
 @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-public class DatasourceNotFoundException extends RuntimeException {
+public class QueryAlreadyExistsException extends RuntimeException{
 
-    private final String reason = "Datasource is not exists";
-    private final HttpStatus status = HttpStatus.NOT_FOUND;
+    private final String reason = "Query name is already exists";
+    private final HttpStatus status = HttpStatus.BAD_REQUEST;
 
-    public DatasourceNotFoundException(String message) {
+    public QueryAlreadyExistsException(String message) {
         super(message);
     }
 }

@@ -2,9 +2,9 @@ package com.vodafone.vcs.conductorwrapper.conductor.worker;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
-import com.vodafone.vcs.conductorwrapper.action.database.api.DatabaseActionApi;
 import com.vodafone.vcs.conductorwrapper.action.database.dto.Query;
 import com.vodafone.vcs.conductorwrapper.action.database.dto.QueryResult;
+import com.vodafone.vcs.conductorwrapper.action.database.service.DatabaseService;
 import com.vodafone.vcs.conductorwrapper.common.contract.WrappedWorker;
 import lombok.Builder;
 import lombok.Data;
@@ -17,14 +17,14 @@ import static com.vodafone.vcs.conductorwrapper.common.WorkerInputValidator.*;
 @Component
 public class DatabaseWorker extends WrappedWorker {
 
-    private final DatabaseActionApi databaseAPI;
+    private final DatabaseService databaseService;
     private static final String K_QUERY_PARAMS = "params";
     private static final String K_QUERY_ID = "queryId";
     private static final String K_DATABASE_CONFIGS = "DatabaseConfigs";
 
-    public DatabaseWorker(DatabaseActionApi databaseAPI) {
+    public DatabaseWorker(DatabaseService databaseService) {
         super("DatabaseWorker");
-        this.databaseAPI = databaseAPI;
+        this.databaseService = databaseService;
     }
 
     @Override
@@ -37,7 +37,7 @@ public class DatabaseWorker extends WrappedWorker {
                 .id(cfg.getQueryId())
                 .params(cfg.getParams())
                 .build();
-        QueryResult qr = databaseAPI.run(query);
+        QueryResult qr = databaseService.run(query);
 
         result.getOutputData().put("result", qr);
         result.setStatus(TaskResult.Status.COMPLETED);

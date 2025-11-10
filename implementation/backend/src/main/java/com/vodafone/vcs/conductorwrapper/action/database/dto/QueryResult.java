@@ -1,8 +1,8 @@
 package com.vodafone.vcs.conductorwrapper.action.database.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.vodafone.vcs.conductorwrapper.action.database.enums.ErrorCode;
 import com.vodafone.vcs.conductorwrapper.action.database.enums.QueryExecStatus;
-import com.vodafone.vcs.conductorwrapper.common.contract.WorkerResult;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,7 +11,8 @@ import java.util.Map;
 
 @Data
 @Builder
-public class QueryResult implements WorkerResult {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class QueryResult {
     private String queryId;
     private int size;
     private int timeout;

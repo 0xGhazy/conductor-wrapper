@@ -1,6 +1,10 @@
 package com.vodafone.vcs.conductorwrapper.action.database.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.vodafone.vcs.conductorwrapper.action.database.enums.DatasourceStatus;
 import com.vodafone.vcs.conductorwrapper.action.database.enums.DatasourceType;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -8,12 +12,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DatasourceDto {
     @NotBlank(message = "Name is required")
     private String name;
@@ -21,15 +27,20 @@ public class DatasourceDto {
     private String url;
     @NotBlank(message = "Username is required")
     private String username;
-    @NotBlank(message = "Password can not be null")
     private String password;
     private Integer connectionTimeout = 3000;
     private Integer idealTimeout = 3000;
+    @NotNull(message = "Maximum pool size is required")
+    @Builder.Default
+    private Integer maximumPoolSize = 5;
+    @Enumerated(EnumType.STRING)
     @NotNull(message = "Type is required")
     private DatasourceType type = DatasourceType.POSTGRES;
     private String schema;
-    private LocalDateTime createdAt = LocalDateTime.now();
-    private LocalDateTime updatedAt;
+    @Enumerated(EnumType.STRING)
+    private DatasourceStatus status;
+    private Instant createdAt = Instant.now();
+    private Instant updatedAt;
 
     @Override
     public String toString() {
