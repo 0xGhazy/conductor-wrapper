@@ -13,7 +13,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -28,17 +27,21 @@ public class DatasourceDto {
     @NotBlank(message = "Username is required")
     private String username;
     private String password;
+    @Builder.Default
     private Integer connectionTimeout = 3000;
+    @Builder.Default
     private Integer idealTimeout = 3000;
     @NotNull(message = "Maximum pool size is required")
     @Builder.Default
     private Integer maximumPoolSize = 5;
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Type is required")
+    @Builder.Default
     private DatasourceType type = DatasourceType.POSTGRES;
     private String schema;
     @Enumerated(EnumType.STRING)
     private DatasourceStatus status;
+    @Builder.Default
     private Instant createdAt = Instant.now();
     private Instant updatedAt;
 

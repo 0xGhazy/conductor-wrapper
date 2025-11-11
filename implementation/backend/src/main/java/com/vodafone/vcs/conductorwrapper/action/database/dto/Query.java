@@ -3,7 +3,6 @@ package com.vodafone.vcs.conductorwrapper.action.database.dto;
 import lombok.*;
 import lombok.extern.log4j.Log4j2;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @Getter
@@ -14,7 +13,7 @@ import java.util.Map;
 public class Query {
     private String id;
     @Singular("withParam")
-    private Map<String, Object> params = new HashMap<>();
+    private Map<String, Object> params;
 
     @Override
     public String toString() {

@@ -15,11 +15,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Configuration
@@ -55,13 +52,9 @@ public class BeansConfig {
     }
 
     @Bean
-    public TaskRunnerConfigurer taskRunnerConfigurer(
-            TaskClient client,
-            List<Worker> workers
-    ) {
-        if (workers == null || workers.isEmpty()) {
+    public TaskRunnerConfigurer taskRunnerConfigurer(TaskClient client, List<Worker> workers) {
+        if (workers == null || workers.isEmpty())
             throw new IllegalStateException("No Conductor Worker beans found");
-        }
 
         int threads = Math.max(workers.size(), 2);
         TaskRunnerConfigurer cfg = new TaskRunnerConfigurer.Builder(client, workers)
@@ -76,7 +69,7 @@ public class BeansConfig {
         var factory = Validation
                 .byProvider(HibernateValidator.class)
                 .configure()
-                .ignoreXmlConfiguration()     // يمنع قراءة META-INF/validation.xml
+                .ignoreXmlConfiguration()
                 .buildValidatorFactory();
         Validator jakartaValidator = factory.getValidator();
         return new SpringValidatorAdapter(jakartaValidator);
