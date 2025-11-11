@@ -22,9 +22,10 @@ export function DatabaseActionProps({ data, onChange }) {
   const fetchQueries = React.useCallback(async () => {
     setLoading(true); setError("");
     try {
-      const r = await fetch(`${DB_URL}/queries`);
+      const r = await fetch(`${DB_URL}/queries/names`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const j = await r.json();
+      const j = await r.json()
+      console.log(j);
       const names = Array.isArray(j) ? j.map(x => typeof x === "string" ? x : x?.name).filter(Boolean) : [];
       setQueries([NONE, ...Array.from(new Set(names))]);
     } catch (e) {
@@ -116,7 +117,7 @@ export function DatabaseActionProps({ data, onChange }) {
 
 
 export function DatabaseActionNode({ data, onRun }) {
-  const  EXECUTION = "http://localhost:9090/api/actions/database/execute";
+  const  EXECUTION = DB_URL + "/queries/execute";
 
   const toJson = (v, fallback) => {
     if (v == null || v === "") return fallback;
@@ -129,16 +130,11 @@ export function DatabaseActionNode({ data, onRun }) {
   
     const cfg = data?.config ?? {};
     const payload = {
-      name: "DATABASE_WORKFLOW",
-      type: "DATABASE_ACTION",
-      config: {
-        queryId: String(cfg.query).toUpperCase(),
-        Params: toJson({}),
-      }
+      id: cfg.query,
+      params: toJson({}),
     };
   
     console.groupCollapsed(`Run Database node: ${data?.name || "Database"}`);
-    console.log("payload", payload);
     console.groupEnd();
   
     try {
@@ -159,7 +155,7 @@ export function DatabaseActionNode({ data, onRun }) {
         return;
       }
   
-      console.log("HTTP execute success", dataOut);
+      console.log("Database execute success", dataOut);
       alert(`HTTP execute success:\n${typeof dataOut === "string" ? dataOut : JSON.stringify(dataOut, null, 2)}`);
     } catch (err) {
       console.error("HTTP execute error", err);
@@ -168,8 +164,6 @@ export function DatabaseActionNode({ data, onRun }) {
   
     if (typeof onRun === "function") onRun(data);
   };
-
-  const engine = data?.config?.engine?.toLowerCase();
 
   return (
     <div className="relative" style={{ pointerEvents: "all" }}>
