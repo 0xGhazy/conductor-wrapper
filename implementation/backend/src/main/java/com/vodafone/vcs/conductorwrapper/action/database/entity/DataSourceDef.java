@@ -12,10 +12,9 @@ import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Data
-@Table(name = "datasource", schema = "core")
+@Table(name = "datasources", schema = "core")
 @Entity
 @Builder
 @AllArgsConstructor

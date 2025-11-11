@@ -130,7 +130,6 @@ public class DatabaseService {
         int timeoutSec = fetchedQuery.getTimeoutSeconds();
         if (timeoutSec > 0) {
             template.getJdbcTemplate().setQueryTimeout(timeoutSec);
-            log.info("Timeout set to: {}", template.getJdbcTemplate().getQueryTimeout());
             out.setTimeout(timeoutSec);
         }
 
@@ -372,6 +371,13 @@ public class DatabaseService {
         log.debug("Query deleted from database successfully");
         queriesCache.remove(name);
         log.debug("Query deleted from cache successfully");
+    }
+
+    public List<String> listAllQueriesNames() {
+        List<String> result = new ArrayList<>();
+        List<QueryStore> qs = queryStoreRepository.findAll();
+        for (QueryStore q: qs) result.add(q.getName());
+        return result;
     }
 
     // ********** Helper Methods **********

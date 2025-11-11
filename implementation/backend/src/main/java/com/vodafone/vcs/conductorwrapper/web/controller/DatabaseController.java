@@ -18,9 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 @Log4j2
@@ -172,6 +171,14 @@ public class DatabaseController {
 
         log.info("Queries list request completed successfully");
         return new ResponseEntity<>(response, response.getStatus());
+    }
+
+    @GetMapping(value = "/queries/names")
+    public ResponseEntity<List<String>> listAllQueriesNames() {
+        log.info("Queries list all names request received");
+        List<String> result = databaseService.listAllQueriesNames();
+        log.info("Queries list all names request completed successfully");
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @PatchMapping("/queries/{name}")
