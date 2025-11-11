@@ -1,15 +1,10 @@
+name: conductor-oss-stack
 services:
   conductor-server:
-    image: ccctechcenter/conductor:server-v3.21.2.RELEASE
-    container_name: conductor-server
+    image: conductor-oss
+    container_name: conductor-server-oss
     environment:
       - CONFIG_PROP=config-postgres.properties
-      - JAVA_OPTS=-Dpolyglot.engine.WarnInterpreterOnly=false
-    build:
-      context: ../
-      dockerfile: docker/server/Dockerfile
-      args:
-        YARN_OPTS: ${YARN_OPTS}
     networks: [internal]
     ports:
       - "8080:8080"
@@ -32,7 +27,7 @@ services:
 
   postgres:
     image: postgres:15
-    container_name: conductor-postgres
+    container_name: conductor-postgres-oss
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -43,30 +38,15 @@ services:
     volumes:
       - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d conductor_core"]
-      interval: 10s
+      test: timeout 5 bash -c 'cat < /dev/null > /dev/tcp/localhost/5432'
+      interval: 5s
       timeout: 5s
-      retries: 10
-
-  keycloak:
-    image: bitnami/keycloak:latest
-    container_name: keycloak
-    command: start-dev
-    environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-    ports:
-      - "5050:8080"
-    networks: [internal]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-volumes:
-  postgres_data:
-  oracle_data:
+      retries: 12
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
 
 networks:
   internal:
