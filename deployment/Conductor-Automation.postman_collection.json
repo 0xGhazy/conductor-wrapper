@@ -16,7 +16,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"calculateTotalAmountOfCustomerInvoices\",\r\n    \"description\": \"calculate the total amount of customer invoices\",\r\n    \"timeoutPolicy\": \"TIME_OUT_WF\",\r\n    \"retryCount\": 1,\r\n    \"responseTimeoutSeconds\": 600,\r\n    \"inputKeys\": [\r\n        \"customer_id\"\r\n    ],\r\n    \"outputKeys\": [\r\n        \"totalAmount\"\r\n    ],\r\n    \"ownerEmail\": \"conductor.wrapper@vodafone.com\",\r\n    \"retryLogic\": \"FIXED\",\r\n    \"retryDelaySeconds\": 60,\r\n    \"timeoutSeconds\": 3600,\r\n    \"rateLimitFrequencyInSeconds\": 1,\r\n    \"rateLimitPerFrequency\": 0,\r\n    \"setConcurrentExecLimit\": 5,\r\n    \"createdBy\": \"Conductor Wrapper\",\r\n    \"updatedBy\": \"Conductor Wrapper\",\r\n    \"updateTime\": 0\r\n}",
+							"raw": "{\r\n    \"name\": \"HttpWorker\",\r\n    \"description\": \"HTTP worker enables you to invoke HTTP requests\",\r\n    \"inputKeys\": [\r\n        \"HttpConfigs\"\r\n    ],\r\n    \"outputKeys\": [\r\n        \"HttpResult\"\r\n    ],\r\n    \"ownerEmail\": \"conductor.wrapper@vodafone.com\",\r\n    \"retryLogic\": \"FIXED\",\r\n    \"retryDelaySeconds\": 60,\r\n    \"timeoutSeconds\": 3600,\r\n    \"rateLimitFrequencyInSeconds\": 1,\r\n    \"rateLimitPerFrequency\": 0,\r\n    \"setConcurrentExecLimit\": 5,\r\n    \"createdBy\": \"Conductor Wrapper\",\r\n    \"updatedBy\": \"Conductor Wrapper\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -112,7 +112,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"name\": \"fetchCustomerTotalInvoices\",\r\n  \"description\": \"Fetch customer invoices and compute totals\",\r\n  \"version\": 1,\r\n  \"tasks\": [\r\n    {\r\n      \"name\": \"calculateTotalAmountOfCustomerInvoices\",\r\n      \"taskReferenceName\": \"t1\",\r\n      \"type\": \"SIMPLE\",\r\n      \"inputParameters\": {\r\n          \"customer_id\": \"${workflow.input.customer_id}\"\r\n      }\r\n    }\r\n  ],\r\n  \"inputParameters\": [\r\n    \"customer_id\"\r\n  ],\r\n  \"outputParameters\": {\r\n    \"totalAmount\": \"${t1.output.totalAmount}\"\r\n  },\r\n  \"ownerEmail\": \"conductor.wrapper@vodafone.com\",\r\n  \"timeoutPolicy\": \"ALERT_ONLY\",\r\n  \"schemaVersion\": 2,\r\n  \"createTime\": 1726650000000,\r\n  \"updateTime\": 0,\r\n  \"createdBy\": \"Conductor Wrapper\",\r\n  \"updatedBy\": \"Conductor Wrapper\",\r\n  \"restartable\": true,\r\n  \"workflowStatusListenerEnabled\": false,\r\n  \"timeoutSeconds\": 300,\r\n  \"variables\": {},\r\n  \"inputTemplate\": {}\r\n}\r\n",
+							"raw": "{\r\n    \"name\": \"HTTP_DB_Workflow\",\r\n    \"version\": 1,\r\n    \"schemaVersion\": 2,\r\n    \"inputParameters\": [\r\n        \"data\"\r\n    ],\r\n    \"tasks\": [\r\n        {\r\n            \"name\": \"HttpWorker\",\r\n            \"taskReferenceName\": \"http\",\r\n            \"type\": \"SIMPLE\",\r\n            \"inputParameters\": {\r\n                \"HttpConfigs\": \"${workflow.input.data.HttpConfigs}\"\r\n            }\r\n        },\r\n        {\r\n            \"name\": \"DatabaseWorker\",\r\n            \"taskReferenceName\": \"db\",\r\n            \"type\": \"SIMPLE\",\r\n            \"inputParameters\": {\r\n                \"DatabaseConfigs\": \"${workflow.input.data.DatabaseConfigs}\"\r\n            }\r\n        }\r\n    ],\r\n    \"outputParameters\": {\r\n        \"HttpResult\": \"${http.output.result}\",\r\n        \"DbResult\": \"${db.output.result}\"\r\n    }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -146,7 +146,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"fetchCustomerTotalInvoices\",\r\n    \"input\": {\r\n        \"customer_id\": 1\r\n    },\r\n    \"priority\": 0,\r\n    \"rateLimited\": false,\r\n    \"workflowVersion\": 2\r\n}",
+							"raw": "{\r\n    \"name\": \"e3\",\r\n    \"input\": {\r\n        \"data\": {\r\n            \"url\": \"https://webhook.site/5141803d-2ed7-4b6b-8038-a3afe8130ba7\",\r\n            \"method\": \"POST\",\r\n            \"headers\": {\r\n                \"Accept\": \"application/json\",\r\n                \"x-name\": \"from-headers\"\r\n            },\r\n            \"body\": null,\r\n            \"connection\": \"keycloak-cli4\"\r\n        }\r\n    },\r\n    \"priority\": 0,\r\n    \"rateLimited\": false,\r\n    \"workflowVersion\": 2\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -167,12 +167,183 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/workflow/exec4?includeTasks=true",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"workflow",
+								"exec4"
+							],
+							"query": [
+								{
+									"key": "includeTasks",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
 		{
 			"name": "Database Action",
 			"item": [
+				{
+					"name": "Datasource",
+					"item": [
+						{
+							"name": "Fetch data source by name",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/action/db/datasource/POSTGRES_TESTING_INACTIVE",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"action",
+										"db",
+										"datasource",
+										"POSTGRES_TESTING_INACTIVE"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fetch all data sources",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-API-VERSION",
+										"value": "1",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:9090/api/conductor/admin/db/datasource",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "9090",
+									"path": [
+										"api",
+										"conductor",
+										"admin",
+										"db",
+										"datasource"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update data source by name",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"POSTGRES_TESTING_INACTIVE\",\r\n    \"url\": \"jdbc:postgresql://127.0.0.1:55432/automation_test_postgres\",\r\n    \"connectionTimeout\": 3000,\r\n    \"idealTimeout\": 3000,\r\n    \"type\": \"POSTGRES\",\r\n    \"username\": \"root\",\r\n    \"password\": \"root\",\r\n    \"schema\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/action/db/datasource/POSTGRES_TESTING_INACTIVE",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"action",
+										"db",
+										"datasource",
+										"POSTGRES_TESTING_INACTIVE"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Register/Create new data source",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"POSTGRES_TESTING_REG\",\r\n    \"url\": \"jdbc:postgresql://127.0.0.1:55432/automation_test_postgres\",\r\n    \"connectionTimeout\": 5000,\r\n    \"idealTimeout\": 5000,\r\n    \"type\": \"POSTGRES\",\r\n    \"username\": \"root\",\r\n    \"password\": \"root\",\r\n    \"schema\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/action/db/datasource",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"action",
+										"db",
+										"datasource"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Data source cache refresh",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/action/db/datasource/cache/refresh",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"action",
+										"db",
+										"datasource",
+										"cache",
+										"refresh"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
 				{
 					"name": "Cache Refresh",
 					"request": {
@@ -214,6 +385,347 @@
 						}
 					},
 					"response": []
+				}
+			]
+		},
+		{
+			"name": "Action",
+			"item": [
+				{
+					"name": "HTTP",
+					"item": [
+						{
+							"name": "Execute Request",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:9090/api/actions/database/queries",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "9090",
+									"path": [
+										"api",
+										"actions",
+										"database",
+										"queries"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Database",
+					"item": [
+						{
+							"name": "Datasource",
+							"item": [
+								{
+									"name": "Register new datasource",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"name\": \"ORACLE_TESTING\",\r\n  \"url\": \"jdbc:oracle:thin:@//127.0.0.1:1521/FREEPDB1\",\r\n  \"username\": \"root\",\r\n  \"password\": \"root\",\r\n  \"connectionTimeout\": 3000,\r\n  \"idealTimeout\": 3000,\r\n  \"type\": \"ORACLE\"\r\n}\r\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:9090/api/actions/database/datasources",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "9090",
+											"path": [
+												"api",
+												"actions",
+												"database",
+												"datasources"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "List all datasources",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:9090/api/actions/database/datasources",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "9090",
+											"path": [
+												"api",
+												"actions",
+												"database",
+												"datasources"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update datasource by name",
+									"request": {
+										"method": "PATCH",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"name\": \"postgres_testing2\",\r\n  \"url\": \"jdbc:postgresql://127.0.0.1:55432/automation_test_postgres\",\r\n  \"username\": \"root\",\r\n  \"password\": \"root\",\r\n  \"connectionTimeout\": 4000,\r\n  \"idealTimeout\": 4000,\r\n  \"type\": \"POSTGRES\"\r\n}\r\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:9090/api/actions/database/datasources/POSTGRES_TESTING",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "9090",
+											"path": [
+												"api",
+												"actions",
+												"database",
+												"datasources",
+												"POSTGRES_TESTING"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get datasource by name",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:9090/api/actions/database/datasources/POSTGRES_TESTING2",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "9090",
+											"path": [
+												"api",
+												"actions",
+												"database",
+												"datasources",
+												"POSTGRES_TESTING2"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete datasource by name",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:9090/api/actions/database/datasources/POSTGRES_TESTING2",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "9090",
+											"path": [
+												"api",
+												"actions",
+												"database",
+												"datasources",
+												"POSTGRES_TESTING2"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Query",
+							"item": [
+								{
+									"name": "Create query",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"name\": \"fetchSalesWithStartAndEndDate\",\r\n  \"sqlQuery\": \"SELECT customer_id, first_name, last_name, email, created_at FROM test.customers WHERE email=:email\",\r\n  \"timeoutSeconds\": 3,\r\n  \"dataSource\": \"POSTGRES_TESTING\",\r\n  \"queryType\": \"SELECT\"\r\n}\r\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:9090/api/actions/database/queries",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "9090",
+											"path": [
+												"api",
+												"actions",
+												"database",
+												"queries"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get query by name",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:9090/api/actions/database/queries/get_active_users",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "9090",
+											"path": [
+												"api",
+												"actions",
+												"database",
+												"queries",
+												"get_active_users"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "List all queries",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:9090/api/actions/database/queries",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "9090",
+											"path": [
+												"api",
+												"actions",
+												"database",
+												"queries"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update query by name",
+									"request": {
+										"method": "PATCH",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"name\": \"get_active_users\",\r\n  \"sqlQuery\": \"SELECT id, email FROM users WHERE status = 'ACTIVE' LIMIT 100\",\r\n  \"timeoutSeconds\": 4,\r\n  \"dataSource\": \"POSTGRES_TESTING2\",\r\n  \"queryType\": \"SELECT\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:9090/api/actions/database/queries/get_active_users",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "9090",
+											"path": [
+												"api",
+												"actions",
+												"database",
+												"queries",
+												"get_active_users"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete query by name",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:9090/api/actions/database/queries/get_active_users",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "9090",
+											"path": [
+												"api",
+												"actions",
+												"database",
+												"queries",
+												"get_active_users"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Execute query",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"id\": \"fetchSalesWithStartAndEndDateLimit100\",\r\n    \"params\": {\r\n        \"start_sale_date\": \"2015-01-01\",\r\n        \"end_sale_date\": \"2015-01-05\"\r\n    }\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:9090/api/actions/database/queries/execute",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "9090",
+											"path": [
+												"api",
+												"actions",
+												"database",
+												"queries",
+												"execute"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
 				}
 			]
 		}
