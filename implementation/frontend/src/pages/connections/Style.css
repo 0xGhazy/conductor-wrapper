@@ -1,0 +1,146 @@
+/* Header */
+.connections-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 32px;
+  background-color: #e60000;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+.connections-header .header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.connections-header .logo {
+  height: 60px; /* Adjust size */
+  width: auto;
+}
+
+/* New connection button */
+.new-connection-button {
+  margin: 20px 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-create {
+  background-color: #e60000;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.btn-create:hover {
+  background-color: #cc0000;
+}
+
+
+/* Table */
+.connections-table-container {
+  max-width: 900px;
+  margin: 0 auto;
+  overflow-x: auto;
+}
+
+.connections-table {
+  width: 90%;
+  border-collapse: collapse;
+  font-family: Arial, sans-serif;
+}
+
+.connections-table thead {
+  background-color: #f2f2f2;
+}
+
+.connections-table th,
+.connections-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.connections-table tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.connections-table tbody tr:hover {
+  background-color: #ffe5e5; /* subtle red hover */
+}
+
+.actions-cell button {
+  margin-right: 8px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s ease;
+}
+
+.actions-cell button:hover {
+  opacity: 0.85;
+}
+
+.actions-cell .btn-delete {
+  /* background-color: #ff4d4d; */
+  color: white;
+}
+
+.actions-cell button:not(.btn-delete) {
+  /* background-color: #e60000; */
+  color: gray;
+}
+
+/* Error text */
+.text-error {
+  color: #cc0000;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #333;
+  transition: color 0.2s;
+}
+
+.btn-icon:hover {
+  color: #e60000;
+} 
+
+.connections-table .actions-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px; /* spacing between icons */
+}
+
+.connections-table .actions-cell button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.connections-table .actions-cell button:hover {
+  color: #d32f2f; /* for delete, or change color dynamically */
+}

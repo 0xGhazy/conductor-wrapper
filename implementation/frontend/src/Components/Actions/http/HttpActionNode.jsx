@@ -15,20 +15,30 @@ export function HttpActionProps({ data, onChange }) {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
 
-  const fetchConnections = React.useCallback(async (signal) => {
-    setLoading(true); setError("");
-    try {
-      const res = await fetch(CONN_URL + "/connections", { signal });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      const names = Array.isArray(json)
-        ? json.map((x) => (typeof x === "string" ? x : x?.name)).filter(Boolean)
-        : [];
-      setItems([NONE, ...Array.from(new Set(names))]);
-    } catch (e) {
-      if (e.name !== "AbortError") setError(String(e.message || e));
-    } finally { setLoading(false); }
-  }, []);
+const fetchConnections = React.useCallback(async (signal) => {
+  setLoading(true);
+  setError("");
+
+  try {
+    const res = await fetch(CONN_URL + "/connections", { signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const json = await res.json();
+
+    const arr = Array.isArray(json?.data) ? json.data : [];
+
+    const names = arr
+      .map((x) => (typeof x === "string" ? x : x?.name))
+      .filter(Boolean);
+
+    setItems([NONE, ...Array.from(new Set(names))]);
+  } catch (e) {
+    if (e.name !== "AbortError") setError(String(e.message || e));
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
 
   React.useEffect(() => {
     const ctrl = new AbortController();
