@@ -1,111 +1,46 @@
 package com.vodafone.vcs.conductorwrapper.action.http.dto;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
-import com.vodafone.vcs.conductorwrapper.action.http.enums.XHttpMethod;
 import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-import java.util.HashMap;
+
 import java.util.Map;
-import java.util.Objects;
 
 @Getter
-@Component
+@Builder
 @AllArgsConstructor
 @EqualsAndHashCode
 public class XHttpRequest {
+
+    @NotBlank(message = "Node name is required")
+    private String nodeName;
+
+    @NotBlank(message = "Url is required")
     private String url;
+
+    @NotNull(message = "Method is required")
+    @Enumerated(EnumType.STRING)
     private HttpMethod method;
+
+    @Singular("withHeader")
+    @NotNull(message = "Headers is not nullable")
     private Map<String, String> headers;
+
+    @Singular("withQuery")
+    @NotNull(message = "Queries is not nullable")
+    private Map<String, String> queries;
+
+    @NotNull(message = "body is not nullable")
     private Object body;
+
+    @Builder.Default
+    @Positive(message = "Timeout must be positive number of ms")
+    private Integer timeoutInMilliSeconds = 5000;
+
+    @NotNull(message = "Connection is not nullable")
     private String connection;
-    private boolean isBuilt = false;
-
-    private XHttpRequest() {}
-
-    // Handle validation and building the HTTP request as planed
-    public static class builder {
-        private String url;
-        private XHttpMethod method;
-        private Map<String,String> headers = new HashMap<>();
-        private Object body;
-        private String connection;
-
-        public builder url(@NotBlank(message = "Request url is required") String url) {
-            this.url = url;
-            return this;
-        }
-
-        public builder method(@NotBlank(message = "Request method is required") XHttpMethod method) {
-            this.method = method;
-            return this;
-        }
-
-        public builder withHeader(@NotBlank(message = "Request header name is required") String header,
-                                  @NotBlank(message = "Request header value is required") String value) {
-            this.headers.put(header, value);
-            return this;
-        }
-
-        public builder headers(@NotNull(message = "Request headers can not be null") Map<String, String> headers) {
-            this.headers.putAll(headers);
-            return this;
-        }
-
-        public builder body(Object body) {
-            this.body = body;
-            return this;
-        }
-
-        public builder connection(String connection) {
-            this.connection = connection;
-            return this;
-        }
-
-        public XHttpRequest build() {
-            // --- validation
-            if (!StringUtils.hasText(url)) {
-                throw new IllegalArgumentException("Request url is required");
-            }
-            if (method == null) {
-                throw new IllegalArgumentException("Request method is required");
-            }
-            // --- construct
-            XHttpRequest x = new XHttpRequest();
-            x.url = this.url;
-            x.method = map(method);
-            x.headers = (this.headers == null) ? new HashMap<>() : new HashMap<>(this.headers);
-            x.body = this.body;
-            x.connection = this.connection;
-            x.isBuilt = true;
-            return x;
-        }
-
-        private HttpMethod map(XHttpMethod m) {
-            return switch (Objects.requireNonNull(m)) {
-                case GET -> HttpMethod.GET;
-                case POST -> HttpMethod.POST;
-                case PUT -> HttpMethod.PUT;
-                case PATCH -> HttpMethod.PATCH;
-                case DELETE -> HttpMethod.DELETE;
-                case OPTIONS -> HttpMethod.OPTIONS;
-                case HEAD -> HttpMethod.HEAD;
-                case TRACE -> HttpMethod.TRACE;
-            };
-        }
-    }
-
-    @Override
-    public String toString() {
-        return "{" +
-                "url=" + url +
-                ", method=" + method +
-                ", headers=" + headers +
-                ", body=" + body +
-                ", connection=" + connection +
-                ", hash=" + hashCode() +
-                '}';
-    }
 }

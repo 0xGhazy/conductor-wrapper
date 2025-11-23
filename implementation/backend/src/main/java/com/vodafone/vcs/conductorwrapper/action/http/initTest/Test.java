@@ -18,19 +18,8 @@ public class Test {
 
     private final HttpConnectionsRepository repository;
 
-    @PostConstruct
+//    @PostConstruct
     public void init() {
-        OAuth2 strategy = OAuth2
-                .builder()
-                .webClient(WebClient.builder().build())
-                .grantType(XGrantType.PASSWORD)
-                .clientId("admin-cli")
-                .username("admin")
-                .password("admin")
-                .tokenEndpoint("http://localhost:5050/realms/master/protocol/openid-connect/token")
-                .build();
-        log.info("Test connection: {}", strategy.testAuthentication());
-
         HttpConnection conn2 = HttpConnection
                 .builder()
                 .name("keycloak-cli2")
@@ -39,8 +28,9 @@ public class Test {
                 .username("admin")
                 .strategy(AuthenticationStrategy.OAUTH2)
                 .password("admin")
-                .tokenEndpoint("http://localhost:5050/realms/master/protocol/openid-connect/token")
+                .tokenEndpoint("http://localhost:9080/realms/master/protocol/openid-connect/token")
                 .build();
+        repository.save(conn2);
 
         HttpConnection conn3 = HttpConnection
                 .builder()
@@ -50,8 +40,9 @@ public class Test {
                 .username("admin")
                 .strategy(AuthenticationStrategy.OAUTH2)
                 .password("admin")
-                .tokenEndpoint("http://localhost:5050/realms/master/protocol/openid-connect/token")
+                .tokenEndpoint("http://localhost:9080/realms/master/protocol/openid-connect/token")
                 .build();
+        repository.save(conn3);
 
         HttpConnection conn4 = HttpConnection
                 .builder()
@@ -61,8 +52,9 @@ public class Test {
                 .username("admin")
                 .strategy(AuthenticationStrategy.OAUTH2)
                 .password("admin")
-                .tokenEndpoint("http://localhost:5050/realms/master/protocol/openid-connect/token")
+                .tokenEndpoint("http://localhost:9080/realms/master/protocol/openid-connect/token")
                 .build();
+        repository.save(conn4);
 
     }
 

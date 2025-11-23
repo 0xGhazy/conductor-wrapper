@@ -2,27 +2,29 @@ package com.vodafone.vcs.conductorwrapper.conductor.worker;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
-import com.vodafone.vcs.conductorwrapper.action.http.api.HttpActionApi;
+import com.vodafone.vcs.conductorwrapper.action.http.service.HttpService;
 import com.vodafone.vcs.conductorwrapper.action.http.dto.XHttpRequest;
-import com.vodafone.vcs.conductorwrapper.action.http.enums.XHttpMethod;
 import com.vodafone.vcs.conductorwrapper.common.contract.WrappedWorker;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+
 import static com.vodafone.vcs.conductorwrapper.common.WorkerInputValidator.*;
 
 @Log4j2
 @Component
 public class HttpWorker extends WrappedWorker {
 
-    private final HttpActionApi httpActionApi;
+    private final HttpService httpService;
+
     private static final String K_HTTP_CONFIGS = "HttpConfigs";
     private static final String K_URL = "url";
     private static final String K_METHOD = "method";
@@ -32,9 +34,9 @@ public class HttpWorker extends WrappedWorker {
     private static final String K_CONNECTION = "connection";
     private static final String DEFAULT_CONN = "--NONE--";
 
-    public HttpWorker(HttpActionApi httpActionApi) {
+    public HttpWorker(HttpService httpService) {
         super("HttpWorker");
-        this.httpActionApi = httpActionApi;
+        this.httpService = httpService;
     }
 
     @Override
@@ -55,15 +57,15 @@ public class HttpWorker extends WrappedWorker {
         log.info("HTTP worker request start method={} url={} headers={} body_size={}B connection={}",
                 cfg.getMethod(), cfg.getUrl(), safeHeaders, bodySize, cfg.getConnection());
 
-        XHttpRequest request = new XHttpRequest.builder()
+        XHttpRequest request = XHttpRequest.builder()
                 .url(cfg.getUrl())
                 .headers(cfg.getHeaders())
                 .connection(cfg.getConnection())
-                .method(XHttpMethod.valueOf(cfg.getMethod()))
+                .method(map(cfg.getMethod()))
                 .body(cfg.getBody())
                 .build();
 
-        Map<String, Object> response = httpActionApi.execute(request);
+        Map<String, Object> response = httpService.execute(request);
         log.debug("Response success: {}, Response status: {}, ", response.get("success"), response.get("status"));
 
         result.getOutputData().put("result", response);
@@ -102,6 +104,24 @@ public class HttpWorker extends WrappedWorker {
                 .url(finalUrl)
                 .build();
     }
+
+
+    private HttpMethod map(String m) {
+        return switch (m) {
+                case "GET" -> HttpMethod.GET;
+                case "POST" -> HttpMethod.POST;
+                case "PUT" -> HttpMethod.PUT;
+                case "PATCH" -> HttpMethod.PATCH;
+                case "DELETE" -> HttpMethod.DELETE;
+                case "OPTIONS" -> HttpMethod.OPTIONS;
+                case "HEAD" -> HttpMethod.HEAD;
+                case "TRACE" -> HttpMethod.TRACE;
+                default -> HttpMethod.GET;
+            };
+        }
+
+
+
 
     private static Map<String,String> redactHeaders(Map<String,String> in) {
         if (in == null || in.isEmpty()) return Map.of();

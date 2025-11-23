@@ -1,6 +1,7 @@
 package com.vodafone.vcs.conductorwrapper.action.http.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.NonNull;
 
 public record TokenResponse (
         @JsonProperty("access_token")  String accessToken,
@@ -8,7 +9,7 @@ public record TokenResponse (
         @JsonProperty("expires_in")    Long   expiresIn,
         @JsonProperty("token_type")    String tokenType
 ) {
-    @Override
+    @NonNull @Override
     public String toString() {
         return "{" +
                 "accessToken='" + accessToken + '\'' +

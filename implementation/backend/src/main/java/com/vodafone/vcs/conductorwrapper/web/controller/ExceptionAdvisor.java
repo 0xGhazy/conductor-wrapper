@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.vodafone.vcs.conductorwrapper.action.database.exception.DatasourceDuplicationException;
 import com.vodafone.vcs.conductorwrapper.action.database.exception.DatasourceNotFoundException;
 import com.vodafone.vcs.conductorwrapper.action.database.exception.GenericErrorException;
+import com.vodafone.vcs.conductorwrapper.common.exceptions.EntityAlreadyExistsException;
+import com.vodafone.vcs.conductorwrapper.common.exceptions.EntityNotFoundException;
 import com.vodafone.vcs.conductorwrapper.common.response.ResponseError;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -80,6 +82,34 @@ public class ExceptionAdvisor extends ResponseEntityExceptionHandler {
         logResponseErrorDetails(error);
         return new ResponseEntity<>(error, ex.getStatus());
     }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ResponseError> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request) {
+        String path = ((ServletWebRequest) request).getRequest().getRequestURI();
+        ResponseError error = ResponseError.builder()
+                .message(ex.getMessage())
+                .details(path)
+                .reason(ex.getReason())
+                .requestId(MDC.get("RID"))
+                .build();
+        logResponseErrorDetails(error);
+        return new ResponseEntity<>(error, ex.getStatus());
+    }
+
+    @ExceptionHandler(EntityAlreadyExistsException.class)
+    public ResponseEntity<ResponseError> handleEntityAlreadyExistsException(EntityAlreadyExistsException ex, WebRequest request) {
+        String path = ((ServletWebRequest) request).getRequest().getRequestURI();
+        ResponseError error = ResponseError.builder()
+                .message(ex.getMessage())
+                .reason(ex.getReason())
+                .details(path)
+                .requestId(MDC.get("RID"))
+                .build();
+        logResponseErrorDetails(error);
+        return new ResponseEntity<>(error, ex.getStatus());
+    }
+
+
 
     @ExceptionHandler(DatasourceNotFoundException.class)
     public ResponseEntity<ResponseError> handleDatasourceNotFoundException(DatasourceNotFoundException ex, WebRequest request) {

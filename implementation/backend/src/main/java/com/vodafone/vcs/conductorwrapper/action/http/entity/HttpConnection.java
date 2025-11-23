@@ -8,7 +8,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -18,16 +21,19 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class HttpConnection {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Id @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     private String name;
+
     @Enumerated(EnumType.STRING)
     private AuthenticationStrategy strategy;
+
     @Convert(converter = EncryptionConverter.class) private String apiKey;
     @Convert(converter = EncryptionConverter.class) private String apiKeyHeader;
+
     @Enumerated(EnumType.STRING)
     private XGrantType grantType;
+
     @Convert(converter = EncryptionConverter.class) private String clientId;
     @Convert(converter = EncryptionConverter.class) private String username;
     @Convert(converter = EncryptionConverter.class) private String password;
@@ -35,9 +41,9 @@ public class HttpConnection {
     @Convert(converter = EncryptionConverter.class) private String clientSecret;
     @Convert(converter = EncryptionConverter.class) private String scope;
     @Convert(converter = EncryptionConverter.class) private String code;
-    @Convert(converter = EncryptionConverter.class)  private String codeVerifier;
+    @Convert(converter = EncryptionConverter.class) private String codeVerifier;
     private String redirectUri;
     @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
-    private LocalDateTime updatedAt;
+    @CreationTimestamp private Instant createdAt = Instant.now();
+    @UpdateTimestamp private Instant updatedAt;
 }

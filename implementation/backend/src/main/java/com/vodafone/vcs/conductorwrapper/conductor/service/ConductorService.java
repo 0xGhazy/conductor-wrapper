@@ -24,21 +24,6 @@ public class ConductorService {
 
     private final ObjectMapper mapper;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // TODO: read this from database or API call
-    // TODO: Recreate tasks with descriptive names
     private final Map<ActionType, String> actionHandlers = Map.of(
             ActionType.HTTP_ACTION, "HTTP_Workflow_Only",
             ActionType.DATABASE_ACTION, "DATABASE_WORKFLOW"

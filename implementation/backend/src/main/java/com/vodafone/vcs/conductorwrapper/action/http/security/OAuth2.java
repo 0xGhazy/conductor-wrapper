@@ -30,8 +30,7 @@ public class OAuth2 implements AuthStrategy {
     private volatile String name;
     @Getter
     private volatile String refreshToken;
-    @Getter
-    @Builder.Default
+    @Getter @Builder.Default
     private volatile Instant expiresAt = Instant.EPOCH;
     private XGrantType grantType;
     private String tokenEndpoint;
@@ -66,7 +65,6 @@ public class OAuth2 implements AuthStrategy {
         this.redirectUri   = src.getRedirectUri();
         this.codeVerifier  = src.getCodeVerifier();
         this.name          = src.getName();
-        log.info("register {}", name);
         this.webClient = WebClient.builder().build();
         testAuthentication();
     }
@@ -85,7 +83,7 @@ public class OAuth2 implements AuthStrategy {
     }
 
     public TokenResponse fetchToken(boolean isRefreshToken) {
-//        log.debug("Attempting to fetch {} token", isRefreshToken ? "refresh" : "access");
+        log.debug("Attempting to fetch {} token", isRefreshToken ? "refresh" : "access");
         TokenResponse response = null;
         try {
             if (isRefreshToken) {
@@ -94,7 +92,7 @@ public class OAuth2 implements AuthStrategy {
                 response = fetchAccessToken();
             }
             seed(response);
-//            log.debug("{} fetch successfully", isRefreshToken ? "refresh" : "access");
+            log.debug("{} fetch successfully", isRefreshToken ? "refresh" : "access");
         } catch (WebClientResponseException.MethodNotAllowed e) {
             log.error("Web client MethodNotAllowed exception occurred: {}", e.getMessage());
 
@@ -123,7 +121,7 @@ public class OAuth2 implements AuthStrategy {
         try {
             TokenResponse t = (refreshToken != null) ? fetchToken(true) : fetchToken(false);
             this.accessToken  = t.accessToken();
-//            log.info("Access Token for {}: {}", name, accessToken);
+            log.info("Access Token for {}: {}", name, accessToken);
             if (t.refreshToken() != null && !t.refreshToken().isBlank()) this.refreshToken = t.refreshToken();
             long expiresIn = Math.max(1, t.expiresIn());
             this.expiresAt = Instant.now().plusSeconds(expiresIn);
@@ -138,7 +136,7 @@ public class OAuth2 implements AuthStrategy {
 
     @Override
     public String toString() {
-        return "AuthStrategy.OAuth2{" +
+        return "{" +
                 "webClient=" + webClient +
                 ", accessToken='" + accessToken + '\'' +
                 ", expiresAt=" + expiresAt +

@@ -47,34 +47,28 @@ public class MetaDataService {
     @PostConstruct
     private void init() {
         metadataClient.setRootURI(baseUrl);
-        log.info("Metadata cclient is initialized successfully");
+        log.info("Metadata client is initialized successfully");
     }
 
 
     @Transactional
     public TaskDefDto createOrUpdateTaskDefinition(@Valid TaskDefDto dto) {
         log.debug("Attempting to store/update task definition into conductor database");
-
-        log.debug("Converting task DTO to task definition");
         TaskDef task = taskAdapter.toTaskDef(dto);
-        log.debug("Task converted successfully");
-
         try {
             task = metadataClient.getTaskDef(dto.getName());
             log.debug("Flagged as update request, Set update timestamp");
             task.setUpdatedBy("Conductor Wrapper");
             task.setUpdateTime(System.currentTimeMillis());
         } catch (ConductorClientException ex) {
-            log.warn("Conductor exception: {}", ex.getMessage());
-            if (ex.getMessage().contains("No such taskType found by name")) {
+            log.warn("Conductor exception: {}", ex.getMessage(), ex);
+            if (ex.getMessage().contains("No such taskType")) {
                 task.setCreateTime(System.currentTimeMillis());
                 task.setCreatedBy("Conductor Wrapper");
             }
         }
-
         metadataClient.registerTaskDefs(List.of(task));
         log.debug("Task definition created and registered successfully");
-
         return taskAdapter.toTaskDto(task);
     }
 
